@@ -7,4 +7,4 @@ Just me refreshing my C knowledge. Turns out porting code from C to Go goes a lo
 
 ### Progress
 - The C Programming language
-  I'm working through this one, it's a borrowed copy, so I can't keep it forever!
+  (I'm working through this one, it's a borrowed copy, so I can't keep it forever!)
