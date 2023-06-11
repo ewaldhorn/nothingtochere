@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <script type="module">
+      (async() => {
+        const response = await fetch('main.wasm');
+        const bytes = await response.arrayBuffer();
+        const { instance } = await WebAssembly.instantiate(bytes);
+	      // console.log('The sum of 5 and 5 is: ' + instance.exports.sum(5, 5));
+      })();
+    </script>
+  </body>
+</html>
