@@ -5,13 +5,13 @@
 
 float A, B, C;
 
-float cubeWidth = 10.0, K1 = 40.0;
+float cubeWidth = 20.0, K1 = 40.0;
 const int width = 160, height = 44;
 float zBuffer[width * height];
 char buffer[width * height];
 int backgroundASCIICode = ' ';
 float incrementSpeed = 0.6;
-int distanceFromCamera = 60, xp, yp, idx;
+int distanceFromCamera = 100, xp, yp, idx;
 float x, y, z, ooz;
 
 float calculateX(int i, int j, int k)
@@ -67,11 +67,14 @@ int main()
                 calculateForSurface(cubeX, cubeY, -cubeWidth, '.');
                 calculateForSurface(cubeWidth, cubeY, cubeX, '$');
                 calculateForSurface(-cubeWidth, cubeY, -cubeX, '~');
+                calculateForSurface(-cubeX, cubeY, cubeWidth, '#');
+                calculateForSurface(cubeX, -cubeWidth, -cubeY, ';');
+                calculateForSurface(cubeX, cubeWidth, cubeY, '+');
             }
         }
-        
+
         printf("\x1b[H");
-        
+
         for (int k = 0; k < width * height; k++)
         {
             putchar(k % width ? buffer[k] : 10);
