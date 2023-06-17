@@ -9,7 +9,7 @@ int main()
     ppn = &pn;     // pointer to pointer of value
     pppn = &ppn;   // pointer to pointer to pointer of value
 
-    printf("%p == %p\n", *pppn, ppn);
+    printf("Address %p == %p\n", *pppn, ppn);
 
     printf("The value of n    is %d.\n", n);
     printf("The value of pn   is %d.\n", *pn);
