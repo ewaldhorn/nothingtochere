@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    printf("Content-Type: text/plain\n\n");
+    printf("Hello, World\n");
+
+    return 0;
+}
+
+int sum(int left, int right) {
+    return left + right;
+}

@@ -1,0 +1,1 @@
+zig build-exe -O ReleaseSmall -target wasm32-wasi main.c -lc
