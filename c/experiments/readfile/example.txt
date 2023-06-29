@@ -1,0 +1,10 @@
+This file contains a fair amount
+of text. It's
+on
+multiple
+lines, just to see what happens
+if you read a file
+with text
+on multiple lines in C.
+
+I guess it works?
