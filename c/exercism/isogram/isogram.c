@@ -1,6 +1,6 @@
 #include "isogram.h"
 #include "stdio.h"
-#include "strings.h"
+#include "string.h"
 #include "ctype.h"
 
 int main() 
@@ -32,12 +32,46 @@ bool is_isogram(const char phrase[])
     strcpy(workPhrase, phrase);
 
     // now make it lowercase, to make things easier
-    for (int i = 0; i < strlen(workPhrase); i++) {
+    for (long unsigned int i = 0; i < strlen(workPhrase); i++) {
         workPhrase[i] = tolower(workPhrase[i]);
     }
 
-    // debug code
-    // printf("Received '%s', converted to '%s'.\n", phrase, workPhrase);
+    bool state = true;
 
-    return false;
+    return state;
 }
+
+// bool is_isogram(const char phrase[])
+// {
+//     if (strlen(phrase) == 0)
+//     {
+//         return false;
+//     }
+
+//     // make a copy of the phrase
+//     char workPhrase[strlen(phrase)+1];
+//     strcpy(workPhrase, phrase);
+
+//     // now make it lowercase, to make things easier
+//     for (long unsigned int i = 0; i < strlen(workPhrase); i++) {
+//         workPhrase[i] = tolower(workPhrase[i]);
+//     }
+
+//     bool state = true;
+
+//     for (long unsigned int i = 0; i < strlen(workPhrase); i++) {
+//         if (workPhrase[i] != '-' && workPhrase[i] != ' ')
+//         {
+//             // we don't have a hyphen or a space
+//             for (long unsigned int j = i+1; j < strlen(workPhrase); j++) {
+//                 if (workPhrase[i] == workPhrase[j])
+//                 {
+//                     state = false;
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+
+//     return state;
+// }
