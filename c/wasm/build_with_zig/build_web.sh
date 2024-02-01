@@ -1,0 +1,1 @@
+zig build-lib -O ReleaseSmall -target wasm32-freestanding-musl main.c -lc
