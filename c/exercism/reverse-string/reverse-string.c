@@ -14,7 +14,7 @@ char *reverse(const char *value)
 {
 	int length = strlen(value);
 	char *result;
-    result = malloc(sizeof(char) * (length + 1));
+	result = malloc(sizeof(char) * (length + 1));
 
 	int i = 0;
 	while (i < length)
