@@ -1,1 +1,1 @@
-zig cc screen.c -o screen
+zig cc screen.c helpers.c -o screen
