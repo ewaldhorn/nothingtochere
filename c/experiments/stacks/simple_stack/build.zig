@@ -22,6 +22,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    exe.linkLibC(); // link against LibC
+    exe.addIncludePath(b.path("csrc"));
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
@@ -55,6 +58,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    exe_unit_tests.linkLibC(); // link against LibC
+    exe_unit_tests.addIncludePath(b.path("csrc"));
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
