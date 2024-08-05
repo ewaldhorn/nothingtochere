@@ -4,6 +4,8 @@ const stack = @cImport({
     @cInclude("simple_stack.c");
 });
 
+pub fn main() void {}
+
 // ====================================================================== TESTS
 const expect = std.testing.expect;
 

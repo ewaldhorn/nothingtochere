@@ -1,0 +1,24 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - task --list-all
+    silent: true
+  build:
+    cmds:
+      - zig build
+    silent: true
+  run:
+    cmds:
+      - zig build run
+    silent: true
+  test:
+    cmds:
+      - zig build test --summary all
+    silent: true
