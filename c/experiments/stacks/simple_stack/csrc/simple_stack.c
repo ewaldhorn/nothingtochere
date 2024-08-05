@@ -22,3 +22,15 @@ int pop() {
 
   return result;
 }
+
+// ---------------------------------------------------------------------- clear
+void clear() {
+  top = EMPTY;
+}
+
+// --------------------------------------------------------------------- peek()
+int peek() {
+  if (top == EMPTY) return STACK_EMPTY;
+
+  return theStack[top];
+}
