@@ -1,4 +1,4 @@
-#include <stdio.h>
+// #include <stdio.h>
 #include <limits.h>
 #include <stdbool.h>
 
@@ -28,9 +28,4 @@ int pop() {
   top--;
 
   return result;
-}
-
-// ======================================================================= main
-int main() {
-  return 0;
 }
