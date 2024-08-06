@@ -1,0 +1,25 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  default:
+    desc: Lists available tasks.
+    cmds:
+      - task --list-all
+    silent: true
+  build:
+    desc: Builds the C and Zig binary.
+    cmds:
+      - zig build
+    silent: true
+  run:
+    desc: Runs the binary.
+    cmds:
+      - zig build run
+    silent: true
+  test:
+    desc: Runs the Zig tests against the C code.
+    cmds:
+      - zig build test --summary all
+    silent: true
