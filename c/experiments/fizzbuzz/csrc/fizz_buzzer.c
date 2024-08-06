@@ -5,11 +5,11 @@ const char* buzzer(const int n) {
   char *result;
 
   if (n % 15 == 0){
-    result = "FizzBuzz";
+    asprintf(&result, "FizzBuzz");
   } else if (n % 3 == 0) {
-    result = "Fizz";
+    asprintf(&result, "Fizz");
   } else if (n % 5 == 0) {
-    result = "Buzz";
+    asprintf(&result, "Buzz");
   } else {
     asprintf(&result, "%d", n);
   }
@@ -20,5 +20,7 @@ const char* buzzer(const int n) {
 // -------------------------------------------------------------------- version
 /// returns the version of the app as a string
 const char* version() {
-  return "0.0.1";
+  char *result;
+  asprintf(&result, "0.0.1");
+  return result;
 }
