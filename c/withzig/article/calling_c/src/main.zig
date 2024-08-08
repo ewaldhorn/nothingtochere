@@ -1,24 +1,34 @@
 const std = @import("std");
 
-pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+const cStringFunctions = @cImport({
+    @cInclude("string.h");
+});
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+const cMyMath = @cImport(@cInclude("my_math.c"));
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+pub fn main() void {
+    const myString = "This is my string, it contains 45 characters.";
+    std.debug.print("Zig: '{s}' contains {d} characters.\n", .{ myString, myString.len });
+    std.debug.print("C: '{s}' contains {d} characters.\n", .{ myString, cStringFunctions.strlen(myString) });
 
-    try bw.flush(); // don't forget to flush!
+    const left = 26;
+    const right = 16;
+    std.debug.print("The sum of {d} and {d} is {d}.\n", .{ left, right, cMyMath.summer(left, right) });
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+test "Zig and C agree on string lengths" {
+    const inputString = "This is the input string we will use for this test.";
+    const zigLength = inputString.len;
+    const cLength = cStringFunctions.strlen(inputString);
+
+    try std.testing.expect(zigLength == cLength);
+}
+
+test "Zig calling a custom C function" {
+    const left = 28;
+    const right = 14;
+    const expected = 42;
+    const result = cMyMath.summer(left, right);
+
+    try std.testing.expect(result == expected);
 }
