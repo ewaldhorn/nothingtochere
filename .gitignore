@@ -4,3 +4,5 @@ c/wasm/build_with_zig/main.wasm
 c/experiments/stacks/simple_stack/.zig-cache
 c/experiments/stacks/simple_stack/zig-out
 c/experiments/fizzbuzz/.zig-cache
+c/withzig/article/calling_c/.zig-cache
+c/withzig/article/calling_c/zig-out
