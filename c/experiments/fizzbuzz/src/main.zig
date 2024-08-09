@@ -20,11 +20,24 @@ fn strdup(str: [:0]const u8) ![*:0]u8 {
     return cStrings.strdup(str) orelse error.OutOfMemory;
 }
 
+// ---------------------------------------------------------------- saferStrDup
+fn saferStrDup(allocator: std.mem.Allocator, str: [:0]const u8) ![*:0]u8 {
+    const cCopy: [*:0]u8 = cStrings.strdup(str) orelse return error.OutOfMemory;
+    defer std.c.free(cCopy);
+
+    // Create a Zig slice of the C buffer that's length-aware.
+    const zCopy: [:0]u8 = std.mem.span(cCopy);
+
+    // Allocate a new null-terminated Zig-managed slice and copy in the contents of zCopy.
+    return allocator.dupeZ(u8, zCopy);
+}
+
 // ======================================================================= MAIN
 pub fn main() void {}
 
 // ====================================================================== TESTS
 const expect = std.testing.expect;
+const testAllocator = std.testing.allocator;
 
 // ----------------------------------------------------------------------------
 test "call C to duplicate a string" {
@@ -32,6 +45,17 @@ test "call C to duplicate a string" {
     std.debug.print("\ns    = [{s}] (type={}, size={d}, len={d} address={*})\n", .{ s, @TypeOf(s), @sizeOf(@TypeOf(s.*)), s.len, s });
     const sCopy = try strdup(s);
     defer std.c.free(sCopy);
+    std.debug.print("sCopy= [{s}] (type={}, size={d}, len={d} address={*})\n", .{ sCopy, @TypeOf(sCopy), @sizeOf(@TypeOf(sCopy)), std.mem.len(sCopy), sCopy });
+}
+
+// ----------------------------------------------------------------------------
+test "calling safer Z-wrapped string duplicator" {
+    const s = "hi";
+    std.debug.print("\ns    = [{s}] (type={}, size={d}, len={d} address={*})\n", .{ s, @TypeOf(s), @sizeOf(@TypeOf(s.*)), s.len, s });
+
+    const sCopy = try saferStrDup(testAllocator, s);
+    defer testAllocator.free(sCopy);
+
     std.debug.print("sCopy= [{s}] (type={}, size={d}, len={d} address={*})\n", .{ sCopy, @TypeOf(sCopy), @sizeOf(@TypeOf(sCopy)), std.mem.len(sCopy), sCopy });
 }
 
