@@ -3,13 +3,13 @@
 #include <string.h>
 
 // ----------------------------------------------------- justPrintAStaticString
-void justPrintAStaticString() {
+void justPrintAStaticString(void) {
   printf("C strings can be confusing!\n");
 }
 
 // ---------------------------------------------- printStringWithEscapedNewline
 // Decimal 10, Hex 0A, is the newline character in ASCII
-void printStringWithEscapedNewline() {
+void printStringWithEscapedNewline(void) {
   printf("This newline is unusual...\x0A");
 }
 
