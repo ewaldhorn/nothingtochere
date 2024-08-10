@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+// --------------------------------------------------------------------- DEFINE
 #define TRUE "-"
 #define FALSE "_"
 
@@ -60,18 +61,19 @@ char *NXOR(char *left, char *right) {
   }
 }
 
+// ======================================================================= MAIN
 int main() {
-  int m, n;
-  scanf("%d", &n);
-  scanf("%d", &m);
+  int inputSignals, outputSignals;
+  scanf("%d", &inputSignals);
+  scanf("%d", &outputSignals);
 
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < inputSignals; i++) {
     char input_name[9];
     char input_signal[65];
     scanf("%s%s", input_name, input_signal);
   }
 
-  for (int i = 0; i < m; i++) {
+  for (int i = 0; i < outputSignals; i++) {
     char output_name[9];
     char type[9];
     char input_name_1[9];
@@ -79,7 +81,7 @@ int main() {
     scanf("%s%s%s%s", output_name, type, input_name_1, input_name_2);
   }
 
-  for (int i = 0; i < m; i++) {
+  for (int i = 0; i < outputSignals; i++) {
 
     // Write an answer using printf(). DON'T FORGET THE TRAILING \n
     // To debug: fprintf(stderr, "Debug messages...\n");
