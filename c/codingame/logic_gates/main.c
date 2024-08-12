@@ -3,12 +3,14 @@
 #include <string.h>
 
 // --------------------------------------------------------------------- DEFINE
-#define TRUE "-"
-#define FALSE "_"
+#define TRUE '-'
+#define FALSE '_'
+
+enum gates { andgate, orgate, xorgate, nandgate, norgate, nxorgate };
 
 // ------------------------------------------------------------------------ AND
-char *AND(char *left, char *right) {
-  if (strcmp(left, TRUE) && (strcmp(right, TRUE))) {
+char AND(char left, char right) {
+  if ((left == TRUE) && (right == TRUE)) {
     return TRUE;
   } else {
     return FALSE;
@@ -16,8 +18,8 @@ char *AND(char *left, char *right) {
 }
 
 // ------------------------------------------------------------------------- OR
-char *OR(char *left, char *right) {
-  if (strcmp(left, TRUE) || strcmp(right, TRUE)) {
+char OR(char left, char right) {
+  if ((left == TRUE) || (right == TRUE)) {
     return TRUE;
   } else {
     return FALSE;
@@ -25,9 +27,9 @@ char *OR(char *left, char *right) {
 }
 
 // ------------------------------------------------------------------------ XOR
-char *XOR(char *left, char *right) {
-  if ((strcmp(left, TRUE) && strcmp(right, FALSE)) ||
-      (strcmp(left, FALSE) && strcmp(right, TRUE))) {
+char XOR(char left, char right) {
+  if (((left == TRUE) && (right == FALSE)) ||
+      ((left == FALSE) && (right == TRUE))) {
     return TRUE;
   } else {
     return FALSE;
@@ -35,8 +37,8 @@ char *XOR(char *left, char *right) {
 }
 
 // ----------------------------------------------------------------------- NAND
-char *NAND(char *left, char *right) {
-  if (strcmp(AND(left, right), TRUE)) {
+char NAND(char left, char right) {
+  if ((AND(left, right) == TRUE)) {
     return FALSE;
   } else {
     return TRUE;
@@ -44,8 +46,8 @@ char *NAND(char *left, char *right) {
 }
 
 // ------------------------------------------------------------------------ NOR
-char *NOR(char *left, char *right) {
-  if (strcmp(OR(left, right), TRUE)) {
+char NOR(char left, char right) {
+  if ((OR(left, right) == TRUE)) {
     return FALSE;
   } else {
     return TRUE;
@@ -53,25 +55,46 @@ char *NOR(char *left, char *right) {
 }
 
 // ----------------------------------------------------------------------- NXOR
-char *NXOR(char *left, char *right) {
-  if (strcmp(XOR(left, right), TRUE)) {
+char NXOR(char left, char right) {
+  if ((XOR(left, right) == TRUE)) {
     return FALSE;
   } else {
     return TRUE;
   }
 }
 
+// ---------------------------------------------------------------- getGateType
+enum gates getGateType(char *gate) {
+  enum gates gatetype;
+
+  if (strcmp(gate, "AND")) {
+    gatetype = andgate;
+  } else if (strcmp(gate, "OR")) {
+    gatetype = orgate;
+  } else if (strcmp(gate, "XOR")) {
+    gatetype = xorgate;
+  } else if (strcmp(gate, "NAND")) {
+    gatetype = nandgate;
+  } else if (strcmp(gate, "NOR")) {
+    gatetype = norgate;
+  } else if (strcmp(gate, "NXOR")) {
+    gatetype = nxorgate;
+  }
+
+  return gatetype;
+}
+
 // --------------------------------------------------------------------- STRUCT
 struct InputStruct {
-  char *name;
-  char *signal;
+  char name[4];
+  char signal[100];
 };
 
 struct InstructionsStruct {
-  char *name;
-  char *gate;
-  char *left;
-  char *right;
+  char name[9];
+  char gate[9];
+  char left[100];
+  char right[100];
 };
 
 // ======================================================================= MAIN
@@ -88,9 +111,9 @@ int main() {
     char input_name[2];
     char input_signal[100];
     scanf("%s%s", input_name, input_signal);
-    fprintf(stderr, "Read: %s %s\n", input_name, input_signal);
-    inputs[i].name = input_name;
-    inputs[i].signal = input_signal;
+
+    strcpy(inputs[i].name, input_name);
+    strcpy(inputs[i].signal, input_signal);
   }
 
   // now read all the output signals
@@ -100,25 +123,49 @@ int main() {
     char input_name_1[9];
     char input_name_2[9];
     scanf("%s%s%s%s", output_name, type, input_name_1, input_name_2);
-    fprintf(stderr, "Read %s %s %s %s\n", output_name, type, input_name_1,
-            input_name_2);
-    instructions[i].name = output_name;
-    instructions[i].gate = type;
-    instructions[i].left = input_name_1;
-    instructions[i].right = input_name_2;
-  }
 
-  for (int i = 0; i < outputSignals; i++) {
-    fprintf(stderr, "%s %s %s %s\n", instructions[i].name, instructions[i].gate,
-            instructions[i].left, instructions[i].right);
+    strcpy(instructions[i].name, output_name);
+    strcpy(instructions[i].gate, type);
+    strcpy(instructions[i].left, input_name_1);
+    strcpy(instructions[i].right, input_name_2);
   }
 
   // now process it
   for (int i = 0; i < outputSignals; i++) {
     printf("%s ", instructions[i].name);
-
+    enum gates gateType = getGateType(instructions[i].gate);
     int len = strlen(instructions[i].left);
+
+    fprintf(stderr, "%d Looking at %s of type %s with inputs %s and %s\n", i,
+            instructions[i].name, instructions[i].gate, instructions[i].left,
+            instructions[i].right);
+
     for (int pos = 0; pos < len; pos++) {
+      switch (gateType) {
+      case andgate:
+        printf("%c",
+               AND(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      case orgate:
+        printf("%c", OR(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      case xorgate:
+        printf("%c",
+               XOR(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      case nandgate:
+        printf("%c",
+               NAND(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      case norgate:
+        printf("%c",
+               NOR(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      case nxorgate:
+        printf("%c",
+               NXOR(instructions[i].left[pos], instructions[i].right[pos]));
+        break;
+      }
     }
 
     printf("\n");
@@ -126,3 +173,22 @@ int main() {
 
   return 0;
 }
+
+/**
+
+3
+3
+CLK _-_-_-_-_-_-_-_-_-_-_-_-_-
+IN1 ___---___---___---___---__
+IN2 --__--__--__--__--__--__--
+OUT1 AND CLK IN1
+OUT2 AND CLK IN2
+OUT3 AND IN1 IN2
+
+
+
+OUT1 ___-_-___-_-___-_-___-_-__
+OUT2 _-___-___-___-___-___-___-
+OUT3 ____--___-______--___-____
+
+*/
