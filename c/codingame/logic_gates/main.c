@@ -67,17 +67,17 @@ char NXOR(char left, char right) {
 enum gates getGateType(char *gate) {
   enum gates gatetype;
 
-  if (strcmp(gate, "AND")) {
+  if (strcmp(gate, "AND") == 0) {
     gatetype = andgate;
-  } else if (strcmp(gate, "OR")) {
+  } else if (strcmp(gate, "OR") == 0) {
     gatetype = orgate;
-  } else if (strcmp(gate, "XOR")) {
+  } else if (strcmp(gate, "XOR") == 0) {
     gatetype = xorgate;
-  } else if (strcmp(gate, "NAND")) {
+  } else if (strcmp(gate, "NAND") == 0) {
     gatetype = nandgate;
-  } else if (strcmp(gate, "NOR")) {
+  } else if (strcmp(gate, "NOR") == 0) {
     gatetype = norgate;
-  } else if (strcmp(gate, "NXOR")) {
+  } else if (strcmp(gate, "NXOR") == 0) {
     gatetype = nxorgate;
   }
 
@@ -173,22 +173,3 @@ int main() {
 
   return 0;
 }
-
-/**
-
-3
-3
-CLK _-_-_-_-_-_-_-_-_-_-_-_-_-
-IN1 ___---___---___---___---__
-IN2 --__--__--__--__--__--__--
-OUT1 AND CLK IN1
-OUT2 AND CLK IN2
-OUT3 AND IN1 IN2
-
-
-
-OUT1 ___-_-___-_-___-_-___-_-__
-OUT2 _-___-___-___-___-___-___-
-OUT3 ____--___-______--___-____
-
-*/
