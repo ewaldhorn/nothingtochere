@@ -6,7 +6,21 @@
 #define TRUE '-'
 #define FALSE '_'
 
+// ----------------------------------------------------------------------- ENUM
 enum gates { andgate, orgate, xorgate, nandgate, norgate, nxorgate };
+
+// --------------------------------------------------------------------- STRUCT
+struct InputStruct {
+  char name[4];
+  char signal[100];
+};
+
+struct InstructionsStruct {
+  char name[9];
+  char gate[9];
+  char left[100];
+  char right[100];
+};
 
 // ------------------------------------------------------------------------ AND
 char AND(char left, char right) {
@@ -83,19 +97,6 @@ enum gates getGateType(char *gate) {
 
   return gatetype;
 }
-
-// --------------------------------------------------------------------- STRUCT
-struct InputStruct {
-  char name[4];
-  char signal[100];
-};
-
-struct InstructionsStruct {
-  char name[9];
-  char gate[9];
-  char left[100];
-  char right[100];
-};
 
 // ======================================================================= MAIN
 int main() {
