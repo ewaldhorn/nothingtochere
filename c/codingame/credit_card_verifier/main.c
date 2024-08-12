@@ -2,16 +2,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+// -------------------------------------------------------------------- stepOne
 int stepOne(char *card) {
-  int len = strlen(card);
+  int total = 0;
 
-  fprintf(stderr, "\n");
-  for (int pos = len - 1; pos > 0; pos -= 2) {
-    fprintf(stderr, "%c ", card[pos]);
+  for (int pos = strlen(card) - 2; pos >= 0; pos -= 2) {
+    int val = 2 * (card[pos] - '0');
+    if (val >= 10) {
+      val = val - 9;
+    }
+    total += val;
   }
-  // 5 9 8 8 7 7 5 4
-  fprintf(stderr, "\n");
-  return 0;
+
+  return total;
+}
+
+// -------------------------------------------------------------------- stepTwo
+int stepTwo(char *card) {
+  int total = 0;
+
+  for (int pos = strlen(card) - 1; pos >= 0; pos -= 2) {
+    int val = card[pos] - '0';
+    total += val;
+  }
+
+  return total;
 }
 
 // --------------------------------------------------------------- unpspaceCard
@@ -44,12 +59,16 @@ int main() {
     char card[21];
     unspaceCard(card, readCard);
 
-    fprintf(stderr, "The card number is '%s'\n", readCard);
-    fprintf(stderr, "The card number is '%s'\n", card);
-    fprintf(stderr, "Step one gives %d\n", stepOne(readCard));
+    // fprintf(stderr, "The card number is '%s'\n", readCard);
+    // fprintf(stderr, "The card number is '%s'\n", card);
+    // fprintf(stderr, "Step one gives %d\n", stepOne(card));
+    // fprintf(stderr, "Step two gives %d\n", stepTwo(card));
+    if ((stepOne(card) + stepTwo(card)) % 10 == 0) {
+      printf("YES\n");
+    } else {
+      printf("NO\n");
+    }
   }
-
-  printf("YES or NO\n");
 
   return EXIT_SUCCESS;
 }
