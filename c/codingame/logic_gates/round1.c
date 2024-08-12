@@ -124,13 +124,26 @@ int main() {
 
   // read all the input signals
   for (int i = 0; i < inputSignals; i++) {
-    scanf("%s%s", inputs[i].name, inputs[i].signal);
+    char input_name[100];
+    char input_signal[100];
+    scanf("%s%s", input_name, input_signal);
+
+    strcpy(inputs[i].name, input_name);
+    strcpy(inputs[i].signal, input_signal);
   }
 
   // now read all the output signals
   for (int i = 0; i < outputSignals; i++) {
-    scanf("%s%s%s%s", instructions[i].name, instructions[i].gate,
-          instructions[i].left, instructions[i].right);
+    char output_name[100];
+    char type[100];
+    char input_name_1[100];
+    char input_name_2[100];
+    scanf("%s%s%s%s", output_name, type, input_name_1, input_name_2);
+
+    strcpy(instructions[i].name, output_name);
+    strcpy(instructions[i].gate, type);
+    strcpy(instructions[i].left, input_name_1);
+    strcpy(instructions[i].right, input_name_2);
   }
 
   // now process it
@@ -144,6 +157,11 @@ int main() {
         getInputPosition(instructions[i].right, inputSignals, inputs);
 
     int len = strlen(inputs[leftInput].signal);
+
+    // DEBUG CODE
+    // fprintf(stderr, "%d Looking at %s of type %s with inputs %s and %s\n", i,
+    //         instructions[i].name, instructions[i].gate, instructions[i].left,
+    //         instructions[i].right);
 
     for (int pos = 0; pos < len; pos++) {
       switch (gateType) {
