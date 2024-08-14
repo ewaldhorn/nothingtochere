@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  printf("Ok, we need to make a block of %d x %d.\n", width, height);
+  printf("Ok, we need to make a box of %d x %d.\n", width, height);
   box(width, height);
   printf("\n");
 
@@ -44,10 +44,24 @@ int checkParameters(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 }
+
 // ------------------------------------------------------------------------ box
 void box(int width, int height) {
   for (int h = 0; h < height; h++) {
-    for (int w = 0; w < width; w++) {
+
+    if (h == 0 || h == height - 1) {
+      // top or bottom
+      for (int w = 0; w < width; w++) {
+        printf("*");
+      }
+    } else {
+      // sides
+      printf("*");
+
+      for (int w = 0; w < (width - 2); w++) {
+        printf(" ");
+      }
+
       printf("*");
     }
     printf("\n");
