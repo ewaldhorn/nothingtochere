@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
     height = atoi(argv[2]);
   }
 
-  if (width == 0 || height == 0) {
-    puts("Neither width nor height can be 0.\n");
+  if (width < 2 || height < 2) {
+    puts("Neither width nor height can be less than 2.\n");
     return EXIT_FAILURE;
   }
 
