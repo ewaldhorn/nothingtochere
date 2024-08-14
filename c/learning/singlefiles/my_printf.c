@@ -1,3 +1,4 @@
+#include <printf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <uuid/uuid.h>
@@ -10,7 +11,10 @@ int main() {
   char uuidtext[UUID_SIZE];
   uuid_unparse(myuuid, uuidtext);
 
+  register_printf_specifier();
+
   printf("UUID as string: %s\n", uuidtext);
+  printf("UUID custom   : %U\n", myuuid);
 
   return EXIT_SUCCESS;
 }
