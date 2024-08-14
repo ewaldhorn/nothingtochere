@@ -1,10 +1,18 @@
 clear
-zig cc block.c
-./a.out 1
-./a.out 2
-./a.out 7 11
-./a.out 5
-./a.out two
-./a.out 20 10
-./a.out 5 8
-rm a.out
+# block
+echo "======================================================"
+echo Compiling Block
+zig cc block.c -o block.out
+./block.out 1
+./block.out 2
+./block.out 4 3
+rm block.out
+# box
+echo "======================================================"
+echo Compiling Box
+zig cc box.c -g -o box.out
+./box.out 1
+./box.out 2
+./box.out 5
+./box.out 5 8
+rm box.out
