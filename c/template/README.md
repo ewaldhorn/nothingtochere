@@ -12,6 +12,12 @@ I'm using Zig 0.13.0 as the C compiler in this project on a Mac, but it should w
 
 Task is a brilliant tool written in Go that allows you to execute tasks defined in a simple YAML file. I put all the commands I use in there, since it just makes life easier.
 
-### Running
+### Available tasks
 
-Use `task` by itself in the terminal to get a list of available tasks.
+Use `task` by itself in the terminal to get a list of available tasks. Some of the tasks are:
+
+- `task` To see the list of tasks
+- `task build` To build the binaries to the 'bin' folder
+- `task run` To run the 'main.c' file using Zig
+- `task license` To display the license
+- `task readme` To display the readme
