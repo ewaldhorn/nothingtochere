@@ -19,5 +19,6 @@ Use `task` by itself in the terminal to get a list of available tasks. Some of t
 - `task` To see the list of tasks
 - `task build` To build the binaries to the 'bin' folder
 - `task run` To run the 'main.c' file using Zig
+- `task test` To run the C-based tests
 - `task license` To display the license
 - `task readme` To display the readme

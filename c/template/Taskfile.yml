@@ -1,12 +1,13 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 vars:
   SRC_FOLDER: src
   LICENSE_FILE: LICENSE.txt
   README_FILE: README.md
   MAIN_FILE: main.c
+  TEST_FILE: tests.c
   INCLUDE_FILES: lib/my_lib.c lib/my_math.c
   OUTPUT_FOLDER: bin
   OUTPUT_FILE: output
@@ -29,14 +30,21 @@ tasks:
     silent: true
   run:
     desc: Runs '{{.MAIN_FILE}}'.
-    dir: '{{.SRC_FOLDER}}'
+    dir: "{{.SRC_FOLDER}}"
     cmds:
       - zig run {{.MAIN_FILE}} {{.INCLUDE_FILES}}
     silent: true
   build:
     desc: Builds the main binary to the '{{.OUTPUT_FOLDER}}' folder.
-    dir: '{{.SRC_FOLDER}}'
+    dir: "{{.SRC_FOLDER}}"
     cmds:
       - mkdir -p ../{{.OUTPUT_FOLDER}}
       - zig cc {{.MAIN_FILE}} {{.INCLUDE_FILES}} -o '../{{.OUTPUT_FOLDER}}/{{.OUTPUT_FILE}}'
+    silent: true
+  test:
+    desc: Runs the C-based tests.
+    dir: "{{.SRC_FOLDER}}"
+    cmds:
+      - clear
+      - zig run {{.TEST_FILE}} {{.INCLUDE_FILES}}
     silent: true
