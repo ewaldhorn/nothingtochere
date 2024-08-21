@@ -1,0 +1,33 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  SRC_FOLDER: src
+  LICENSE_FILE: LICENSE.txt
+  README_FILE: README.md
+  MAIN_FILE: main.c
+  INCLUDE_FILES: lib/my_lib.c lib/my_math.c
+
+tasks:
+  default:
+    desc: Lists available tasks.
+    cmds:
+      - task --list-all
+    silent: true
+  license:
+    desc: Displays the license.
+    cmds:
+      - cat {{.LICENSE_FILE}}
+    silent: true
+  readme:
+    desc: Displays the README file.
+    cmds:
+      - cat {{.README_FILE}}
+    silent: true
+  run:
+    desc: Runs '{{.MAIN_FILE}}'
+    dir: '{{.SRC_FOLDER}}'
+    cmds:
+      - zig run {{.MAIN_FILE}} {{.INCLUDE_FILES}}
+    silent: true
