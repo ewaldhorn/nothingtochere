@@ -8,6 +8,8 @@ vars:
   README_FILE: README.md
   MAIN_FILE: main.c
   INCLUDE_FILES: lib/my_lib.c lib/my_math.c
+  OUTPUT_FOLDER: bin
+  OUTPUT_FILE: output
 
 tasks:
   default:
@@ -26,8 +28,15 @@ tasks:
       - cat {{.README_FILE}}
     silent: true
   run:
-    desc: Runs '{{.MAIN_FILE}}'
+    desc: Runs '{{.MAIN_FILE}}'.
     dir: '{{.SRC_FOLDER}}'
     cmds:
       - zig run {{.MAIN_FILE}} {{.INCLUDE_FILES}}
+    silent: true
+  build:
+    desc: Builds the main binary to the '{{.OUTPUT_FOLDER}}' folder.
+    dir: '{{.SRC_FOLDER}}'
+    cmds:
+      - mkdir -p ../{{.OUTPUT_FOLDER}}
+      - zig cc {{.MAIN_FILE}} {{.INCLUDE_FILES}} -o '../{{.OUTPUT_FOLDER}}/{{.OUTPUT_FILE}}'
     silent: true
