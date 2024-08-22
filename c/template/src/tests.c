@@ -3,7 +3,7 @@
 
 #include "lib/my_math.h"
 
-#define ASSERT(expr)                                                           \
+#define ENSURE(expr)                                                           \
   if (expr) {                                                                  \
     printf("\033[0;32mPASS: %s\n\033[0m", #expr);                              \
   } else {                                                                     \
@@ -19,17 +19,17 @@ void test_biggestOf(void) {
   int left = 10, right = 8;
 
   int biggest = biggestOf(left, right);
-  ASSERT(biggest == 10);
+  ENSURE(biggest == 10);
 
   biggest = biggestOf(right, left);
-  ASSERT(biggest == 10);
+  ENSURE(biggest == 10);
 
   left = 7;
   biggest = biggestOf(right, left);
-  ASSERT(biggest == 8);
+  ENSURE(biggest == 8);
 
   biggest = biggestOf(left, right);
-  ASSERT(biggest == 8);
+  ENSURE(biggest == 8);
 }
 
 int main() {
