@@ -22,3 +22,7 @@ Use `task` by itself in the terminal to get a list of available tasks. Some of t
 - `task test` To run the C-based tests
 - `task license` To display the license
 - `task readme` To display the readme
+
+### Going further
+
+If you are interested, you also look at [using the Zig build system](https://github.com/allyourcodebase) as a really nice replacement for traditional `make` files. Zig is a great toolchain and programming language, but you don't need to use Zig for your C projects if you don't want to. Instead, you can leverage the power of the toolchain with this project and keep using C as your favourite language.
