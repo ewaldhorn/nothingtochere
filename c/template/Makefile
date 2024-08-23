@@ -6,8 +6,8 @@ SRC_FOLDER=src
 MAIN_FILE=main.c
 TEST_FILE=tests.c
 INCLUDE_FILES=lib/my_lib.c lib/my_math.c
-OUTPUT_FOLDER=bin
-OUTPUT_FILE=output
+OUT_FOLDER=bin
+OUT_FILE=output
 
 .PHONY: default
 default:
@@ -41,4 +41,4 @@ test:
 
 .PHONY: build
 build:
-	@mkdir -p $(OUTPUT_FOLDER);cd $(SRC_FOLDER);$(CC) $(MAIN_FILE) $(INCLUDE_FILES) -o ../$(OUTPUT_FOLDER)/$(OUTPUT_FILE);cd ..;
+	@mkdir -p $(OUT_FOLDER);cd $(SRC_FOLDER);$(CC) $(MAIN_FILE) $(INCLUDE_FILES) -o ../$(OUT_FOLDER)/$(OUT_FILE);cd ..;

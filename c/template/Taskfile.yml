@@ -9,8 +9,8 @@ vars:
   MAIN_FILE: main.c
   TEST_FILE: tests.c
   INCLUDE_FILES: lib/my_lib.c lib/my_math.c
-  OUTPUT_FOLDER: bin
-  OUTPUT_FILE: output
+  OUT_FOLDER: bin
+  OUT_FILE: output
 
 tasks:
   default:
@@ -35,11 +35,11 @@ tasks:
       - zig run {{.MAIN_FILE}} {{.INCLUDE_FILES}}
     silent: true
   build:
-    desc: Builds the main binary to the '{{.OUTPUT_FOLDER}}' folder.
+    desc: Builds the main binary to the '{{.OUT_FOLDER}}' folder.
     dir: "{{.SRC_FOLDER}}"
     cmds:
-      - mkdir -p ../{{.OUTPUT_FOLDER}}
-      - zig cc {{.MAIN_FILE}} {{.INCLUDE_FILES}} -o '../{{.OUTPUT_FOLDER}}/{{.OUTPUT_FILE}}'
+      - mkdir -p ../{{.OUT_FOLDER}}
+      - zig cc {{.MAIN_FILE}} {{.INCLUDE_FILES}} -o '../{{.OUT_FOLDER}}/{{.OUT_FILE}}'
     silent: true
   test:
     desc: Runs the C-based tests.
