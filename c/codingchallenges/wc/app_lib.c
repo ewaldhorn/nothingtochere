@@ -7,7 +7,6 @@ FILE *openFileForReading(char *filename) {
   FILE *filePtr = fopen(filename, "r");
 
   if (filePtr == NULL) {
-    puts("Error opening file.");
     return NULL;
   }
 

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -5,30 +6,38 @@
 
 char *filename;
 
+// ----------------------------------------------------------- handle_arguments
 int handle_arguments(int count, char *arguments[]) {
   if (count < 2) {
     puts("Usage: ccwc [option] <filename>\n");
-    return NOT_ENOUGH_PARAMETERS;
+    return NOT_ENOUGH_ARGUMENTS;
   }
 
   if (count == 2) {
-    printf("File is [%s]\n", arguments[1]);
     filename = arguments[1];
   } else if (count == 3) {
-    printf("Option is [%s]\n", arguments[1]);
-    printf("File is [%s]\n", arguments[2]);
+    // printf("Option is [%s]\n", arguments[1]);
     filename = arguments[2];
   }
 
   return ALL_GOOD;
 }
 
+// ======================================================================= main
 int main(int argc, char **argv) {
   if (handle_arguments(argc, argv) != ALL_GOOD) {
-    puts("Doh!");
+    puts("So much of NO!");
   } else {
-    printf("We received %lld byte(s) as the count.\n",
-           getCharacterCount(filename));
+    int64_t characterCount = getCharacterCount(filename);
+
+    if (characterCount >= 0) {
+      printf(
+          "We received %lld character%s as the character count for \"%s\".\n",
+          characterCount, characterCount != 1 ? "s" : "", filename);
+    } else {
+      printf("Unable to open \"%s\" for reading.\n", filename);
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
   }
-  return EXIT_SUCCESS;
 }

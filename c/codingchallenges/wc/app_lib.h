@@ -3,11 +3,14 @@
 
 #include <stdint.h>
 
-#define ALL_GOOD 0
-#define NOT_ENOUGH_PARAMETERS 1
+// ----------------------------------------------------------- Arguments Errors
+#define ALL_GOOD             0
+#define NOT_ENOUGH_ARGUMENTS 1
 
+// ---------------------------------------------------------------- File Errors
 #define FILE_ERROR -1
 
+// ------------------------------------------------------------------ Functions
 int64_t getCharacterCount(char *filename);
 
 #endif
