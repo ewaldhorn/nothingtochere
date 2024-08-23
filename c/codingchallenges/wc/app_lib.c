@@ -2,24 +2,33 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int64_t getCharacterCount() {
+// --------------------------------------------------------- openFileForReading
+FILE *openFileForReading(char *filename) {
+  FILE *filePtr = fopen(filename, "r");
 
-  int64_t count = 0;
-  FILE *filePtr;
-  char *fname = "artofwar.txt";
-  char ch;
-
-  filePtr = fopen(fname, "r");
   if (filePtr == NULL) {
     puts("Error opening file.");
-    return -1;
+    return NULL;
   }
 
-  while ((ch = fgetc(filePtr)) != EOF) {
-    count += 1;
-  }
+  return filePtr;
+}
 
-  fclose(filePtr);
+// ---------------------------------------------------------- getCharacterCount
+int64_t getCharacterCount() {
+  int64_t count = FILE_ERROR;
+  FILE *filePtr = openFileForReading("artofwar.txt");
+  char ch;
+
+  if (filePtr != NULL) {
+    count = 0;
+
+    while ((ch = fgetc(filePtr)) != EOF) {
+      count += 1;
+    }
+
+    fclose(filePtr);
+  }
 
   return count;
 }

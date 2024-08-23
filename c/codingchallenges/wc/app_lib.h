@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define FILE_ERROR -1
+
 int64_t getCharacterCount();
 
 #endif

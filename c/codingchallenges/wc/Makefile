@@ -16,7 +16,7 @@ default:
 	@echo "run:     Runs the main.c file."
 	@echo "build:   Builds the binaries to the bin directory."
 	@echo "test:    Runs the project tests."
-	@echo "clean:   Cleans up the build output.""
+	@echo "clean:   Cleans up the build output."
 	@echo
 
 .PHONY: clean
