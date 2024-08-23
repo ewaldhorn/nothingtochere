@@ -2,7 +2,7 @@ CC=zig cc
 RUNNER=zig run
 MAIN_FILE=main.c
 TEST_FILE=test.c
-INCLUDE_FILES=
+INCLUDE_FILES=app_lib.c
 OUT_FOLDER=bin
 OUT_FILE=ccwc
 
