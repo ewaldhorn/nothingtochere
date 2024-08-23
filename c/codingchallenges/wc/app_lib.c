@@ -15,9 +15,9 @@ FILE *openFileForReading(char *filename) {
 }
 
 // ---------------------------------------------------------- getCharacterCount
-int64_t getCharacterCount() {
+int64_t getCharacterCount(char *filename) {
   int64_t count = FILE_ERROR;
-  FILE *filePtr = openFileForReading("artofwar.txt");
+  FILE *filePtr = openFileForReading(filename);
   char ch;
 
   if (filePtr != NULL) {

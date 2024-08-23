@@ -7,3 +7,4 @@ c/experiments/fizzbuzz/.zig-cache
 c/withzig/article/calling_c/.zig-cache
 c/withzig/article/calling_c/zig-out
 c/template/bin
+c/codingchallenges/wc/bin
