@@ -8,3 +8,5 @@ c/withzig/article/calling_c/.zig-cache
 c/withzig/article/calling_c/zig-out
 c/template/bin
 c/codingchallenges/wc/bin
+c/experiments/cli/matrix/bin/matrix
+c/learning/zerotohero/file_io/sample.txt
