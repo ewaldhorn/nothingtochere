@@ -17,6 +17,7 @@ Task is a brilliant tool written in Go that allows you to execute tasks defined 
 Use `task` by itself in the terminal to get a list of available tasks. Some of the tasks are:
 
 - `task` To see the list of tasks
+- `task clean` to remove build artifacts
 - `task build` To build the binaries to the 'bin' folder
 - `task run` To run the 'main.c' file using Zig
 - `task test` To run the C-based tests
