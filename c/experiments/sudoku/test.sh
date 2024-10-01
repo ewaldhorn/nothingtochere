@@ -1,1 +1,1 @@
-zig run test.c main.c tools.c
+zig run test.c tools.c
