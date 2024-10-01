@@ -4,6 +4,7 @@
 #define TRUE 1
 #define FALSE 0
 
+char *checkInputs(int argc, char *argv[]);
 void printHelp(char *extraMessage);
 int containsInvalidCharacters(char *inputString);
 void printAsPuzzle(char *inputString);
