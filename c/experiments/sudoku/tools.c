@@ -31,13 +31,11 @@ int containsInvalidCharacters(char *inputString) {
 
 // ----------------------------------------------------------------------------
 void printAsPuzzle(char *inputString) {
-  printf("\n");
-
   for (int pos = 0; pos <= 81; pos++) {
     if (inputString[pos] != '.') {
-      printf("%c", inputString[pos]);
+      printf("%c ", inputString[pos]);
     } else {
-      printf(" ");
+      printf("  ");
     }
 
     if ((pos + 1) % 9 == 0) {
