@@ -5,15 +5,6 @@
 #include "tools.h"
 
 // ----------------------------------------------------------------------------
-// A Sudoku board contains 81 of these blocks in a 9x9 grid
-typedef struct block {
-  int number;
-  int temp;
-  int col;
-  int row;
-} block;
-
-// ----------------------------------------------------------------------------
 // Ensure inputs are valid
 char *checkInputs(int argc, char *argv[]) {
   if (argc != 2) {
@@ -39,29 +30,32 @@ char *checkInputs(int argc, char *argv[]) {
 }
 // ----------------------------------------------------------------------------
 // Populate board from input, spaces become 0, others numbers
-void populateBoard(block board[9][9], char *inputString) {
+void populateBoard(int board[][9], char *inputString) {
   for (int col = 0; col < 9; col++) {
     for (int row = 0; row < 9; row++) {
       char tmp = inputString[col * 9 + row];
       if (tmp > '0' && tmp <= '9') {
-        board[col][row].number = tmp - '0';
+        board[col][row] = tmp - '0';
       } else {
-        board[col][row].number = 0;
+        board[col][row] = 0;
       }
     }
   }
 }
 // ----------------------------------------------------------------------------
 // Display the board
-void printBoard(block board[9][9]) {
+void printBoard(int board[][9]) {
   for (int col = 0; col < 9; col++) {
     for (int row = 0; row < 9; row++) {
-      printf("%d ", board[col][row].number);
+      printf("%d ", board[col][row]);
     }
     printf("\n");
   }
 }
-
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
@@ -78,7 +72,7 @@ int main(int argc, char *argv[]) {
   printf("Calculation solution...\n");
 
   // create the board
-  block board[9][9];
+  int board[9][9];
   populateBoard(board, input);
   printBoard(board);
 
