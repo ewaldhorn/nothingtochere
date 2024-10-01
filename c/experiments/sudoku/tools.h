@@ -1,6 +1,7 @@
 #ifndef __TOOLS_H_
 #define __TOOLS_H_
 
-void printHelp();
+void printHelp(char *extraMessage);
+int containsInvalidCharacters(char *inputString);
 
 #endif
