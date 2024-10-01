@@ -1,10 +1,13 @@
+#include <malloc/_malloc_type.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/syslimits.h>
 
 #include "tools.h"
 
 int board[9][9];
+
 // ----------------------------------------------------------------------------
 // Ensure inputs are valid
 char *checkInputs(int argc, char *argv[]) {
@@ -109,6 +112,20 @@ int solveSudoku() {
 }
 
 // ----------------------------------------------------------------------------
+char *getBoardAsString() {
+  char *buffer;
+  buffer = malloc(82);
+
+  for (int col = 0; col < 9; col++) {
+    for (int row = 0; row < 9; row++) {
+      buffer[col * 9 + row] = '0' + board[col][row];
+    }
+  }
+
+  return buffer;
+}
+
+// ----------------------------------------------------------------------------
 void printBoardAsString() {
   for (int row = 0; row < 9; row++) {
     for (int col = 0; col < 9; col++) {
@@ -146,6 +163,19 @@ int main(int argc, char *argv[]) {
   char *expected = "53467891267219534819834256785976142342685379171392485696153"
                    "7284287419635345286179";
   printf("%s\n", expected);
+
+  char *tmp = getBoardAsString();
+  printf("%s\n", tmp);
+
+  int diff = 0;
+
+  for (int i = 0; i < strlen(expected); i++) {
+    if (expected[i] != tmp[i]) {
+      diff += 1;
+    }
+  }
+
+  printf("Difference: %d\n", diff);
 
   return EXIT_SUCCESS;
 }
