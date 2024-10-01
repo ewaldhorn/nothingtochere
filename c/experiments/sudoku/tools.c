@@ -28,3 +28,22 @@ int containsInvalidCharacters(char *inputString) {
 
   return result;
 }
+
+// ----------------------------------------------------------------------------
+void printAsPuzzle(char *inputString) {
+  printf("\n");
+
+  for (int pos = 0; pos <= 81; pos++) {
+    if (inputString[pos] != '.') {
+      printf("%c", inputString[pos]);
+    } else {
+      printf(" ");
+    }
+
+    if ((pos + 1) % 9 == 0) {
+      printf("\n");
+    }
+  }
+
+  printf("\n");
+}
