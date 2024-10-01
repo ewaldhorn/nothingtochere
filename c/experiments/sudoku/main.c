@@ -4,6 +4,13 @@
 
 #include "tools.h"
 
+#define ENSURE(expr)                                                           \
+  if (expr) {                                                                  \
+    printf("\033[0;32mPASS: %s\n\033[0m", #expr);                              \
+  } else {                                                                     \
+    printf("\033[0;31mFAIL: %s\n\033[0m", #expr);                              \
+  }
+
 int board[9][9];
 
 // ----------------------------------------------------------------------------
@@ -173,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  printf("Difference: %d\n", diff);
+  ENSURE(diff == 0);
 
   return EXIT_SUCCESS;
 }
