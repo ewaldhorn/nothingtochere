@@ -1,6 +1,6 @@
 # Sudoku Solver
 
-Simple Sudoku solver in good old C.
+Simple Sudoku solver in good old C.  I used Zig as the compiler/runner.
 
 Sudoku consists of 81 blocks (9x9) in total.
 Numbers are 1..9.
@@ -27,6 +27,9 @@ Leads to input:
 `.2..6.3.131.9.2....8.....52.78.961...4.1.7.2...528.67.89.....1....3.9.684.3.2..9.`
 
 ## Testing
+
+There are some primitive tests in the `test.c` file. The `test.sh` can be used to run them.
+
 Sample 1
 Input:
 `53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79`
