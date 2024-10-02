@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_LEN 100
+
 #define ENSURE(expr)                                                           \
   if (expr) {                                                                  \
     printf("\033[0;32mPASS: %s\n\033[0m", #expr);                              \
@@ -54,11 +56,39 @@ void test_two(void) {
 }
 
 // ----------------------------------------------------------------------------
+void performTestsFromTextFile() {
+  FILE *fp;
+  fp = fopen("tests.txt", "r");
+  if (fp == NULL) {
+    perror("Failed: ");
+    exit(1);
+  }
+
+  char input[MAX_LEN];
+  char expected[MAX_LEN];
+
+  while (fgets(input, MAX_LEN, fp)) {
+    // Remove trailing newline
+    input[strcspn(input, "\n")] = 0;
+
+    // Assumes we have an expected that follows, so read it too
+    fgets(expected, MAX_LEN, fp);
+    expected[strcspn(expected, "\n")] = 0;
+
+    performTest(input, expected);
+  }
+
+  fclose(fp);
+}
+
+// ----------------------------------------------------------------------------
 int main() {
   display_header();
 
   test_one();
   test_two();
+
+  performTestsFromTextFile();
 
   display_footer();
   return EXIT_SUCCESS;

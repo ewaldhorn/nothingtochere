@@ -29,6 +29,13 @@ Leads to input:
 ## Testing
 
 There are some primitive tests in the `test.c` file. The `test.sh` can be used to run them.
+Tests can either be hard-coded or added to the `tests.txt` file. An input line followed by an expected line will create one test.
+
+For example:
+
+`53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79`
+
+`534678912672195348198342567859761423426853791713924856961537284287419635345286179`
 
 Sample 1
 Input:
