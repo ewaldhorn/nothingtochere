@@ -12,5 +12,4 @@
 #define repeatIf while
 #define whole int
 
-
 #endif
