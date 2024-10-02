@@ -68,12 +68,18 @@ void performTestsFromTextFile() {
   char expected[MAX_LEN];
 
   while (fgets(input, MAX_LEN, fp)) {
+    unsigned long posOfNewline = strcspn(input, "\n");
     // Remove trailing newline
-    input[strcspn(input, "\n")] = 0;
+    if (posOfNewline <= strlen(input)) {
+      input[posOfNewline] = 0;
+    }
 
     // Assumes we have an expected that follows, so read it too
     fgets(expected, MAX_LEN, fp);
-    expected[strcspn(expected, "\n")] = 0;
+    posOfNewline = strcspn(input, "\n");
+    if (posOfNewline <= strlen(expected)) {
+      expected[posOfNewline] = 0;
+    }
 
     performTest(input, expected);
   }
