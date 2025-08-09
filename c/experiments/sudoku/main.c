@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
   printf("Calculation solution...\n");
   solveSudoku(board);
   printBoard(board);
+  printBoardAsString(board);
 
   printf("\n");
 
