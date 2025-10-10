@@ -6,7 +6,7 @@ Correct this code to update the value in the heap
 to 10 before giving the address to main
 **/
 
-int foo(int **ptr) {
+int resizeArrayTo(int **ptr) {
   int value = 10;
   *ptr = (int *)malloc(sizeof(int));
 
@@ -21,7 +21,7 @@ int foo(int **ptr) {
 
 int main() {
   int *ptr = NULL;
-  if (0 != foo(&ptr)) {
+  if (0 != resizeArrayTo(&ptr)) {
     return -1;
   }
 

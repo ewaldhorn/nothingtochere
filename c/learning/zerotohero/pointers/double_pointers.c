@@ -27,6 +27,7 @@ void pointers_to_pointers(void) {
   printf("The ptr_to_ptr points to  : %p\n", ptr_to_ptr_to_number);
   printf("The value at ptr_to_number: %d\n", *ptr_to_number);
 }
+
 // ======================================================================= main
 int main() {
   pointers_to_pointers();
