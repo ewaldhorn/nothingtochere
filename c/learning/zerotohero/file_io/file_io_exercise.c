@@ -1,35 +1,46 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void print_the_flag() {
-  FILE *file = fopen("/temp/flag", "r");
-  if (file == NULL) {
-    perror("fopen");
-    exit(EXIT_FAILURE);
-  }
+    const char *filepath = "/tmp/flag";
+    int fd = open(filepath, O_RDONLY); // Open the file for read-only access.
 
-  // create buffer, zero it out
-  char readBuffer[2000];
-  for (int i = 0; i < sizeof(readBuffer); i++) {
-    readBuffer[i] = 0;
-  }
+    if (fd == -1) {
+        // open failed, print error and exit
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
 
-  size_t bytesRead = fread(readBuffer, 1, sizeof(readBuffer) - 1, file);
-  if (ferror(file)) {
-    perror("fread");
-    fclose(file);
-    exit(EXIT_FAILURE);
-  }
+    // Define buffer size and buffer
+    enum { BUFFER_SIZE = 2000 };
+    char readBuffer[BUFFER_SIZE];
 
-  // Null-terminate the string to be safe
-  readBuffer[bytesRead] = '\0';
-  printf("%s\n", readBuffer);
+    // Read the file content into the buffer
+    // The -1 is typically not needed here since we are not null-terminating on read
+    // but the original code used it, so we'll use the full buffer size
+    ssize_t bytesRead = read(fd, readBuffer, BUFFER_SIZE - 1); // Use read(2)
 
-  int didClose = fclose(file);
-  if (didClose == EOF) {
-    perror("fclose");
-    exit(EXIT_FAILURE);
-  }
+    if (bytesRead == -1) {
+        // read failed, print error, close the file, and exit
+        perror("read");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+
+    // Null-terminate the string to ensure printf works safely
+    readBuffer[bytesRead] = '\0';
+    
+    // Print the content
+    printf("%s\n", readBuffer);
+
+    // Close the file descriptor
+    if (close(fd) == -1) {
+        // close failed, print error and exit
+        perror("close");
+        exit(EXIT_FAILURE);
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
