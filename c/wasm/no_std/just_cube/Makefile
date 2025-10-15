@@ -1,58 +1,93 @@
 # Compiler and flags
 CC = clang
 TARGET = wasm32
-CFLAGS = -Os
+RELEASE_CFLAGS = -Os
+DEBUG_CFLAGS = -g -O0
 LDFLAGS = -Wl,--no-entry \
           -Wl,--export=cube \
           -Wl,--export=square \
           -Wl,--export=twice \
           -Wl,--allow-undefined \
-          -Wl,--strip-all \
           -Wl,--gc-sections
 
-# Source and output
 SRC = ./src/math.c ./src/util.c
 OUTPUT = ./docs/math.wasm
 
+# Default to debug build
+BUILD_TYPE ?= debug
+
 # Default target - shows help if no arguments
-.PHONY: all build clean help serve
+.PHONY: all build clean help serve debug release
 
 # Default target (when no target is specified)
-# This approach uses the fact that if no target is specified,
-# make will run the first target it encounters
 all: help
 
-# Explicit build target
-build: $(OUTPUT)
-
-$(OUTPUT): $(SRC)
+# Release build target
+release:
 	$(CC) \
 		--target=$(TARGET) \
 		-nostdlib \
-		$(CFLAGS) \
+		$(RELEASE_CFLAGS) \
 		$(LDFLAGS) \
-		-o $@ $^
+		-Wl,--strip-all \
+		-o $(OUTPUT) $(SRC)
+
+# Debug build target
+debug:
+	$(CC) \
+		--target=$(TARGET) \
+		-nostdlib \
+		$(DEBUG_CFLAGS) \
+		$(LDFLAGS) \
+		-o $(OUTPUT) $(SRC)
+
+# Build target that uses BUILD_TYPE
+build:
+	@if [ "$(BUILD_TYPE)" = "debug" ]; then \
+		echo "Building debug version..."; \
+		$(CC) \
+			--target=$(TARGET) \
+			-nostdlib \
+			$(DEBUG_CFLAGS) \
+			$(LDFLAGS) \
+			-o $(OUTPUT) $(SRC); \
+	else \
+		echo "Building release version..."; \
+		$(CC) \
+			--target=$(TARGET) \
+			-nostdlib \
+			$(RELEASE_CFLAGS) \
+			$(LDFLAGS) \
+			-Wl,--strip-all \
+			-o $(OUTPUT) $(SRC); \
+	fi
 
 # Help target
 help:
-	@echo ""
-	@echo "-------------------------------------------------------------------------------"
 	@echo "Available targets:"
-	@echo "  build    - Build the WebAssembly module"
-	@echo "  clean    - Remove generated files"
-	@echo "  serve    - Serves the project"
-	@echo "  help     - Show this help message"
+	@echo "  build     - Build using BUILD_TYPE variable (default: release)"
+	@echo "  release   - Build release version (stripped)"
+	@echo "  debug     - Build debug version (with symbols)"
+	@echo "  clean     - Remove generated files"
+	@echo "  serve     - Start local HTTP server on port 9000"
+	@echo "  help      - Show this help message"
 	@echo ""
 	@echo "Build configuration:"
 	@echo "  Sources: $(SRC)"
-	@echo "  Output : $(OUTPUT)"
-	@echo "  Target : $(TARGET)"
+	@echo "  Output: $(OUTPUT)"
+	@echo "  Target: $(TARGET)"
 	@echo ""
+	@echo "Usage examples:"
+	@echo "  make build           # Build release version"
+	@echo "  make build BUILD_TYPE=debug  # Build debug version"
+	@echo "  make debug           # Build debug version"
+	@echo "  make release         # Build release version"
 
 # Clean target
 clean:
 	rm -f $(OUTPUT)
 
+# Serve target - starts local HTTP server
 serve:
 	@echo "Starting local HTTP server on port 9000..."
 	http-server ./docs/ -p 9000
