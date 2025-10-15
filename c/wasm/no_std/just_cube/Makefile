@@ -15,7 +15,7 @@ SRC = ./src/math.c ./src/util.c
 OUTPUT = ./docs/math.wasm
 
 # Default target - shows help if no arguments
-.PHONY: all build clean help
+.PHONY: all build clean help serve
 
 # Default target (when no target is specified)
 # This approach uses the fact that if no target is specified,
@@ -40,6 +40,7 @@ help:
 	@echo "Available targets:"
 	@echo "  build    - Build the WebAssembly module"
 	@echo "  clean    - Remove generated files"
+	@echo "  serve    - Serves the project"
 	@echo "  help     - Show this help message"
 	@echo ""
 	@echo "Build configuration:"
@@ -51,6 +52,10 @@ help:
 # Clean target
 clean:
 	rm -f $(OUTPUT)
+
+serve:
+	@echo "Starting local HTTP server on port 9000..."
+	http-server ./docs/ -p 9000
 
 # Alias for help
 .PHONY: usage
