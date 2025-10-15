@@ -32,8 +32,9 @@
         const input = parseInt(document.getElementById("numberInput").value);
         const squareResult = wasmExports.square(input);
         const cubeResult = wasmExports.cube(input);
+        const twiceResult = wasmExports.twice(input);
         document.getElementById("result").textContent =
-          `Square of ${input} is ${squareResult} and the Cube of ${input} is ${cubeResult}`;
+          `Square of ${input} is ${squareResult} and the Cube of ${input} is ${cubeResult} while twice would be ${twiceResult}.`;
       }
     </script>
   </body>
