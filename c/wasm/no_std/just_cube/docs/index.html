@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WASM Cube Test</title>
+  </head>
+  <body>
+    <input type="number" id="numberInput" value="5" />
+    <button onclick="calculateCube()">Calculate Cube</button>
+    <div id="result"></div>
+
+    <script>
+      async function loadWasm() {
+        const response = await fetch("math.wasm");
+        const bytes = await response.arrayBuffer();
+        const { instance } = await WebAssembly.instantiate(bytes);
+        return instance.exports;
+      }
+
+      let wasmExports;
+
+      loadWasm().then((exports) => {
+        wasmExports = exports;
+        console.log("WASM module loaded");
+      });
+
+      function calculateCube() {
+        if (!wasmExports) {
+          alert("WASM not loaded yet");
+          return;
+        }
+
+        const input = parseInt(document.getElementById("numberInput").value);
+        const squareResult = wasmExports.square(input);
+        const cubeResult = wasmExports.cube(input);
+        document.getElementById("result").textContent =
+          `Square of ${input} is ${squareResult} and the Cube of ${input} is ${cubeResult}`;
+      }
+    </script>
+  </body>
+</html>
