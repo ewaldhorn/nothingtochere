@@ -1,3 +1,6 @@
+# Make file for a C to Wasm project
+
+# -------------------------------------------------------------------------------------------------
 # Compiler and flags
 CC = clang
 TARGET = wasm32
@@ -13,15 +16,19 @@ LDFLAGS = -Wl,--no-entry \
 SRC = ./src/math.c ./src/util.c
 OUTPUT = ./docs/math.wasm
 
+# -------------------------------------------------------------------------------------------------
 # Default to debug build
 BUILD_TYPE ?= debug
 
+# -------------------------------------------------------------------------------------------------
 # Default target - shows help if no arguments
 .PHONY: all build clean help serve debug release
 
+# -------------------------------------------------------------------------------------------------
 # Default target (when no target is specified)
 all: help
 
+# -------------------------------------------------------------------------------------------------
 # Release build target
 release:
 	$(CC) \
@@ -32,6 +39,7 @@ release:
 		-Wl,--strip-all \
 		-o $(OUTPUT) $(SRC)
 
+# -------------------------------------------------------------------------------------------------
 # Debug build target
 debug:
 	$(CC) \
@@ -41,6 +49,7 @@ debug:
 		$(LDFLAGS) \
 		-o $(OUTPUT) $(SRC)
 
+# -------------------------------------------------------------------------------------------------
 # Build target that uses BUILD_TYPE
 build:
 	@if [ "$(BUILD_TYPE)" = "debug" ]; then \
@@ -62,6 +71,7 @@ build:
 			-o $(OUTPUT) $(SRC); \
 	fi
 
+# -------------------------------------------------------------------------------------------------
 # Help target
 help:
 	@echo ""
@@ -86,15 +96,18 @@ help:
 	@echo "   Target: $(TARGET)                                                         "
 	@echo ""
 
+# -------------------------------------------------------------------------------------------------
 # Clean target
 clean:
 	rm -f $(OUTPUT)
 
+# -------------------------------------------------------------------------------------------------
 # Serve target - starts local HTTP server
 serve:
 	@echo "Starting local HTTP server on port 9000..."
 	http-server ./docs/ -p 9000
 
+# -------------------------------------------------------------------------------------------------
 # Alias for help
 .PHONY: usage
 usage: help
