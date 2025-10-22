@@ -1,5 +1,8 @@
 # Make file for a C to Wasm project
 
+# Version info
+VERSION = 1.0.0
+
 # -------------------------------------------------------------------------------------------------
 # Compiler and flags
 CC = clang
@@ -68,6 +71,7 @@ build:
 help:
 	@echo ""
 	@echo "|===========================================================================|"
+	@echo "| Project: C to WASM Builder (v$(VERSION))                                       |"
 	@echo "| Available targets:                                                        |"
 	@echo "|  build     - Build using BUILD_TYPE variable (default: debug)             |"
 	@echo "|  release   - Build release version (stripped)                             |"
