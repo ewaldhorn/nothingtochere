@@ -98,8 +98,14 @@ clean:
 	rm -f $(OUTPUT)
 
 # -------------------------------------------------------------------------------------------------
+# Check for required tools
+check-tools:
+	@which $(CC) > /dev/null || (echo "Error: $(CC) not found"; exit 1)
+	@which http-server > /dev/null || (echo "Warning: http-server not found. Install with: npm install -g http-server")
+
+# -------------------------------------------------------------------------------------------------
 # Serve target - starts local HTTP server
-serve:
+serve: check-tools
 	@echo "Starting local HTTP server on port 9000..."
 	http-server ./docs/ -p 9000
 
