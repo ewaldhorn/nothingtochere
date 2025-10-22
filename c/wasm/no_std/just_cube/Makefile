@@ -31,23 +31,12 @@ all: help
 # -------------------------------------------------------------------------------------------------
 # Release build target
 release:
-	$(CC) \
-		--target=$(TARGET) \
-		-nostdlib \
-		$(RELEASE_CFLAGS) \
-		$(LDFLAGS) \
-		-Wl,--strip-all \
-		-o $(OUTPUT) $(SRC)
+	$(MAKE) build BUILD_TYPE=release
 
 # -------------------------------------------------------------------------------------------------
 # Debug build target
 debug:
-	$(CC) \
-		--target=$(TARGET) \
-		-nostdlib \
-		$(DEBUG_CFLAGS) \
-		$(LDFLAGS) \
-		-o $(OUTPUT) $(SRC)
+	$(MAKE) build BUILD_TYPE=debug
 
 # -------------------------------------------------------------------------------------------------
 # Build target that uses BUILD_TYPE
