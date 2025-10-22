@@ -49,7 +49,7 @@ build:
 			$(DEBUG_CFLAGS) \
 			$(LDFLAGS) \
 			-o $(OUTPUT) $(SRC); \
-	else \
+	elif [ "$(BUILD_TYPE)" = "release" ]; then \
 		echo "Building release version..."; \
 		$(CC) \
 			--target=$(TARGET) \
@@ -58,6 +58,9 @@ build:
 			$(LDFLAGS) \
 			-Wl,--strip-all \
 			-o $(OUTPUT) $(SRC); \
+	else \
+		echo "Error: Unknown BUILD_TYPE '$(BUILD_TYPE)'. Use 'debug' or 'release'."; \
+		exit 1; \
 	fi
 
 # -------------------------------------------------------------------------------------------------
