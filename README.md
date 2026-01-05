@@ -12,7 +12,7 @@ I'm also experimenting with using [Zig](https://ziglang.org/) as a drop-in compi
 
 ## CAUTION
 
-These are _experiments_, so please don't just blindly run any of this code on your computer. Some if it could be meant to recreate a bug or some unexpected behaviour. I try to document that when I add something like that to a public repo, but, alas, something could slip through. Take care. Better yet, use someone else computer!
+These are _experiments_, so please don't just blindly run any of this code on your computer. Some if it could be meant to recreate a bug or some unexpected behaviour. I try to document that when I add something like that to a public repo, but, alas, something could slip through. Take care.
 
 ---
 ### Oi! You lied! I see C++ and other stuff here!
