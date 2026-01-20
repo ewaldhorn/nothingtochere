@@ -11,3 +11,4 @@ c/codingchallenges/wc/bin
 c/experiments/cli/matrix/bin/matrix
 c/learning/zerotohero/file_io/sample.txt
 c/learning/zerotohero/file_io/items.db
+cpp/wasi/test_compiler/logic.wasm

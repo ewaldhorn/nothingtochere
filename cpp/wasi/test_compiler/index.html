@@ -1,0 +1,43 @@
+<html>
+    <body>
+        <script>
+        async function runWasm() {
+            // 1. Load the WASM file
+            const response = await fetch('logic.wasm');
+            const bytes = await response.arrayBuffer();
+
+            // 2. Instantiate with WASI (Required because you used STL/WASI-SDK)
+            // Note: In a browser, you'd usually use a polyfill for 'wasi_snapshot_preview1'
+            const { instance } = await WebAssembly.instantiate(bytes, {
+                wasi_snapshot_preview1: {
+                    proc_exit: (code) => console.log(`Exit code: ${code}`)
+                }
+            });
+
+            const { processNumbers, memory } = instance.exports;
+
+            // 3. Prepare your data
+            const numbers = [10, 20, 30, 40, 50];
+            const length = numbers.length;
+
+            // 4. Allocate space in WASM memory
+            // For simplicity, we'll just use a fixed offset at the start of memory.
+            // In a real app, you should export 'malloc' from C++ to get a safe address.
+            const ptr = instance.exports.malloc(numbers.length * 4); // 4 bytes per int
+            const memoryBuffer = new Int32Array(memory.buffer, ptr, length);
+
+            // 5. Copy JS data into WASM memory
+            memoryBuffer.set(numbers);
+
+            // 6. Call the function!
+            const result = processNumbers(ptr, length);
+            instance.exports.free(ptr); // Clean up when done
+
+            console.log(`The sum of reversed numbers is: ${result}`);
+            // Result should be 150
+        }
+
+        runWasm();
+        </script>
+    </body>
+</html>
