@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <script>
+    async function run() {
+        const response = await fetch('module.wasm');
+        const bytes = await response.arrayBuffer();
+
+        // We pass an empty object. If the Wasm file still
+        // wants "strlen", this will throw a clear error.
+        const { instance } = await WebAssembly.instantiate(bytes, {});
+
+        const { my_alloc, reverse_string, memory } = instance.exports;
+
+        const input = "Clang is working!";
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(input);
+
+        // Allocate space (+1 for null terminator)
+        const ptr = my_alloc(encoded.length + 1);
+
+        // Write to Wasm memory
+        const view = new Uint8Array(memory.buffer, ptr, encoded.length + 1);
+        view.set(encoded);
+        view[encoded.length] = 0; // Null terminator
+
+        // Reverse it
+        reverse_string(ptr);
+
+        // Read it back
+        const decoder = new TextDecoder();
+        const result = decoder.decode(new Uint8Array(memory.buffer, ptr, encoded.length));
+
+        console.log("Original:", input);
+        console.log("Reversed:", result);
+        document.body.innerText = "Check Console! Result: " + result;
+    }
+
+    run().catch(err => {
+        console.error("Wasm Load Error:", err);
+        document.body.innerText = err;
+    });
+    </script>
+</body>
+</html>
