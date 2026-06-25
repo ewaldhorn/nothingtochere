@@ -40,9 +40,10 @@ static float fsqrt(float x) {
 #define BUF_SIZE (WIDTH * HEIGHT * 4)
 
 // ---------------------------------------------------------------------------
-// Pixel buffer — lives in WASM linear memory, visible to JS via pointer.
+// Pixel buffer — allocated at runtime from WASM memory, not embedded in binary.
+// This avoids bloating the .wasm file with 1.9MB of zero bytes.
 // ---------------------------------------------------------------------------
-static uint8_t pixels[BUF_SIZE];
+static uint8_t* pixels;
 
 // ---------------------------------------------------------------------------
 // Ball physics
@@ -277,6 +278,9 @@ static void draw_balls(void) {
 
 __attribute__((export_name("wasm_init")))
 void wasm_init(void) {
+    // Place pixel buffer at a fixed offset past static data.
+    // 64KB is far beyond our ~2KB of static data (balls array, etc.).
+    pixels = (uint8_t*)65536;
     fmemset(pixels, 0, BUF_SIZE);
     ball_count = 0;
 
