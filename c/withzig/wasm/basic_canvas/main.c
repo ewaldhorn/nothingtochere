@@ -40,7 +40,9 @@ static uint8_t* pixels;
 // ---------------------------------------------------------------------------
 // Ball physics
 // ---------------------------------------------------------------------------
-#define MAX_BALLS 300
+#define MAX_BALLS 256
+// MAX_BALLS must be a power of two — the ring-buffer uses (& MAX_BALLS-1) instead of (% MAX_BALLS).
+_Static_assert((MAX_BALLS & (MAX_BALLS - 1)) == 0, "MAX_BALLS must be a power of two");
 
 typedef struct {
     float x, y;
@@ -189,12 +191,12 @@ static void spawn_ball(float x, float y) {
     int slot;
     if (ball_count < MAX_BALLS) {
         // Ring not full: append at the next free slot.
-        slot = (ball_head + ball_count) % MAX_BALLS;
+        slot = (ball_head + ball_count) & (MAX_BALLS - 1);
         ball_count++;
     } else {
         // Ring full: overwrite the oldest ball and advance the head — O(1).
         slot = ball_head;
-        ball_head = (ball_head + 1) % MAX_BALLS;
+        ball_head = (ball_head + 1) & (MAX_BALLS - 1);
     }
 
     Ball* b = &balls[slot];
@@ -221,14 +223,14 @@ static void spawn_ball(float x, float y) {
 static void update_balls(float dt) {
     // ---- Move all balls ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
+        Ball* b = &balls[(ball_head + i) & (MAX_BALLS - 1)];
         b->x += b->vx * dt;
         b->y += b->vy * dt;
     }
 
     // ---- Wall collisions ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
+        Ball* b = &balls[(ball_head + i) & (MAX_BALLS - 1)];
 
         if (b->x - b->radius < 0)      { b->x = b->radius;          b->vx = -b->vx; }
         if (b->x + b->radius > WIDTH)  { b->x = WIDTH - b->radius;  b->vx = -b->vx; }
@@ -238,23 +240,29 @@ static void update_balls(float dt) {
 
     // ---- Ball-ball collisions (equal-mass elastic) ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* a = &balls[(ball_head + i) % MAX_BALLS];
+        Ball* a = &balls[(ball_head + i) & (MAX_BALLS - 1)];
+
+        int idx_b = (ball_head + i + 1) & (MAX_BALLS - 1);
 
         for (int j = i + 1; j < ball_count; j++) {
-            Ball* b = &balls[(ball_head + j) % MAX_BALLS];
+            Ball* b = &balls[idx_b];
 
             float dx = b->x - a->x;
             float dy = b->y - a->y;
             float dist_sq = dx * dx + dy * dy;
             float min_dist = a->radius + b->radius;
 
-            if (dist_sq >= min_dist * min_dist) continue;
+            if (dist_sq >= min_dist * min_dist) {
+                idx_b = (idx_b + 1) & (MAX_BALLS - 1);
+                continue;
+            }
             // Safety net: two balls are essentially coincident (dist < 0.01 px).
             // This can't normally be reached after the first frame because min_dist >= 20,
             // but it guards against division-by-zero if balls ever spawn at the same spot.
             if (dist_sq < 0.0001f) {
                 a->x -= 0.5f;
                 b->x += 0.5f;
+                idx_b = (idx_b + 1) & (MAX_BALLS - 1);
                 continue;
             }
 
@@ -283,13 +291,15 @@ static void update_balls(float dt) {
                 b->vx += vn * nx;
                 b->vy += vn * ny;
             }
+
+            idx_b = (idx_b + 1) & (MAX_BALLS - 1);
         }
     }
 }
 
 static void draw_balls(void) {
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
+        Ball* b = &balls[(ball_head + i) & (MAX_BALLS - 1)];
         int r = (int)b->radius;
         if (r > 0) {
             draw_filled_circle((int)b->x, (int)b->y, r, b->r, b->g, b->b);
