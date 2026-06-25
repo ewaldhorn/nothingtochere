@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Pascal Wasm Canvas</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            margin: 0;
+        }
+        canvas { 
+            border: 2px solid #555; 
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 1. Define the environment we promised the Pascal compiler
+        // This matches the `external 'env'` declarations in basic_canvas.pas
+        const importObject = {
+            env: {
+                fillRect: (x, y, w, h) => {
+                    ctx.fillStyle = "blue";
+                    ctx.fillRect(x, y, w, h);
+                },
+                clearRect: (x, y, w, h) => {
+                    ctx.clearRect(x, y, w, h);
+                }
+            }
+        };
+
+        // 2. Load and instantiate the WebAssembly module
+        WebAssembly.instantiateStreaming(fetch('basic_canvas.wasm'), importObject)
+            .then(result => {
+                const wasmExports = result.instance.exports;
+                
+                // 3. Set up the browser animation loop
+                function step() {
+                    // Call the exported Pascal function directly
+                    wasmExports.renderFrame(canvas.width, canvas.height);
+                    
+                    // Ask the browser to call step() again before the next repaint
+                    requestAnimationFrame(step);
+                }
+                
+                // Start the loop!
+                requestAnimationFrame(step);
+            })
+            .catch(console.error);
+    </script>
+</body>
+</html>
