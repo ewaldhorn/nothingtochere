@@ -50,7 +50,6 @@ typedef struct {
     float vx, vy;
     float radius;
     uint8_t r, g, b;
-    uint8_t alive;
 } Ball;
 
 static Ball balls[MAX_BALLS];
@@ -216,14 +215,12 @@ static void spawn_ball(float x, float y) {
         case 4: b->r = 160; b->g = 0;   b->b = 255; break; // purple
         case 5: b->r = 0;   b->g = 255; b->b = 100; break; // green
     }
-    b->alive = 1;
 }
 
 static void update_balls(float dt) {
     // ---- Move all balls ----
     for (int i = 0; i < ball_count; i++) {
         Ball* b = &balls[i];
-        if (!b->alive) continue;
         b->x += b->vx * dt;
         b->y += b->vy * dt;
     }
@@ -231,7 +228,6 @@ static void update_balls(float dt) {
     // ---- Wall collisions ----
     for (int i = 0; i < ball_count; i++) {
         Ball* b = &balls[i];
-        if (!b->alive) continue;
 
         if (b->x - b->radius < 0)      { b->x = b->radius;          b->vx = -b->vx; }
         if (b->x + b->radius > WIDTH)  { b->x = WIDTH - b->radius;  b->vx = -b->vx; }
@@ -242,11 +238,9 @@ static void update_balls(float dt) {
     // ---- Ball-ball collisions (equal-mass elastic) ----
     for (int i = 0; i < ball_count; i++) {
         Ball* a = &balls[i];
-        if (!a->alive) continue;
 
         for (int j = i + 1; j < ball_count; j++) {
             Ball* b = &balls[j];
-            if (!b->alive) continue;
 
             float dx = b->x - a->x;
             float dy = b->y - a->y;
@@ -254,7 +248,11 @@ static void update_balls(float dt) {
             float min_dist = a->radius + b->radius;
 
             if (dist_sq >= min_dist * min_dist) continue;
-            if (dist_sq < 0.0001f) continue;  // avoid division by zero
+            if (dist_sq < 0.0001f) {  // avoid division by zero; nudge apart
+                a->x -= 0.5f;
+                b->x += 0.5f;
+                continue;
+            }
 
             float dist = fsqrt(dist_sq);
             float nx = dx / dist;
@@ -288,7 +286,6 @@ static void update_balls(float dt) {
 static void draw_balls(void) {
     for (int i = 0; i < ball_count; i++) {
         Ball* b = &balls[i];
-        if (!b->alive) continue;
         int r = (int)b->radius;
         draw_filled_circle((int)b->x, (int)b->y, r, b->r, b->g, b->b);
         draw_circle((int)b->x, (int)b->y, r, 255, 255, 255);
@@ -302,7 +299,7 @@ static void draw_balls(void) {
 __attribute__((export_name("wasm_init")))
 void wasm_init(void) {
     // Place pixel buffer at a fixed offset past static data.
-    // 64KB is far beyond our ~2KB of static data (balls array, etc.).
+    // 64KB is far beyond our ~8KB of static data (balls array, etc.).
     pixels = (uint8_t*)65536;
     fmemset(pixels, 0, BUF_SIZE);
     ball_count = 0;
