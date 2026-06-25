@@ -1,31 +1,15 @@
 library basic_canvas;
 
-// ---------------------------------------------------------------------------
-// Bouncing neon balls with elastic collision — Free Pascal → WASM
-// All drawing into a linear RGBA pixel buffer. JS blits to <canvas>.
-// No RTL dependencies beyond compiler intrinsics.
-// Translation of the freestanding C version at
-// https://github.com/ewaldhorn/nothingtochere/tree/main/c/withzig/wasm/basic_canvas
-// ---------------------------------------------------------------------------
 
 {$mode fpc}
 {$inline on}
-{$WARN 5025 off}  // no sysmelon for freestanding; ignore ext declaration warning
-
-// ---------------------------------------------------------------------------
-// Canvas dimensions
-// ---------------------------------------------------------------------------
+{$WARN 5025 off}
 const
   WIDTH    = 800;
   HEIGHT   = 600;
-  BUF_SIZE = LongInt(WIDTH) * LongInt(HEIGHT) * 4;  // = 1 920 000
-
-// ---------------------------------------------------------------------------
-// Ball ring buffer — MAX_BALLS MUST be a power of two for bitwise wraparound
-// ---------------------------------------------------------------------------
+  BUF_SIZE = LongInt(WIDTH) * LongInt(HEIGHT) * 4;
 const
-  MAX_BALLS = 256;  // 2^8
-
+  MAX_BALLS = 256;
 {$IF (MAX_BALLS and (MAX_BALLS - 1)) <> 0}
   {$FATAL MAX_BALLS must be a power of two}
 {$ENDIF}
@@ -38,33 +22,21 @@ type
     r, g, b: Byte;
   end;
 
-// ---------------------------------------------------------------------------
-// Global state
-// ---------------------------------------------------------------------------
 var
   balls: array[0..MAX_BALLS - 1] of TBall;
-  ballCount: Integer = 0;  // number of active balls (0..MAX_BALLS)
-  ballHead:  Integer = 0;  // ring-buffer index of the oldest ball
-
-  // Xorshift32 PRNG
+  ballCount: Integer = 0;  ballHead:  Integer = 0;
   rngState: Cardinal = $DEADBEEF;
 
-// ---------------------------------------------------------------------------
-// Primitives — host-side entry points expected by FPC runtime
-// ---------------------------------------------------------------------------
 procedure _haltproc(exitCode: Integer); external 'env' name '_haltproc';
 
 // Pixel buffer base address — fixed offset past static data in WASM memory.
 // $20000 (128 KB) is safely past all data segments (~104 KB) with margin.
 // Must be recomputed if WIDTH, HEIGHT, or MAX_BALLS change significantly.
-function PixelBase: PByte; inline;
+function PixelBase: PByte;
 begin
-  PixelBase := PByte($20000);  // 128 KB
+  PixelBase := PByte($20000);
 end;
 
-// ---------------------------------------------------------------------------
-// PRNG — xorshift32 (deterministic, fast, no libc needed)
-// ---------------------------------------------------------------------------
 function RngNext: Cardinal;
 begin
   rngState := rngState xor (rngState shl 13);
@@ -79,10 +51,6 @@ begin
   RngFloat := (RngNext shr 8) / 16777216.0;
 end;
 
-// ---------------------------------------------------------------------------
-// Square root — delegates to FPC's built-in Sqrt, which on wasm32-embedded
-// maps to the f32.sqrt WASM instruction (single uop, IEEE 754 exact).
-// ---------------------------------------------------------------------------
 function FPSqrt(x: Single): Single;
 begin
   if x <= 0.0 then
@@ -91,9 +59,6 @@ begin
     FPSqrt := Sqrt(x);
 end;
 
-// ---------------------------------------------------------------------------
-// Pixel helpers
-// ---------------------------------------------------------------------------
 procedure SetPixel(x, y: Integer; r, g, b, a: Byte);
 var
   idx: Cardinal;
@@ -121,19 +86,6 @@ begin
 end;
 
 // Unchecked write — caller guarantees 0 <= x < WIDTH, 0 <= y < HEIGHT.
-procedure SetPixelUnchecked(x, y: Integer; r, g, b: Byte);
-var
-  idx: Cardinal;
-  p: PByte;
-begin
-  p := PixelBase;
-  idx := (Cardinal(y) * WIDTH + Cardinal(x)) * 4;
-  p[idx + 0] := r;
-  p[idx + 1] := g;
-  p[idx + 2] := b;
-  p[idx + 3] := 255;
-end;
-
 // Fill a horizontal span, clamping x to [0, WIDTH-1]
 procedure FillScanline(y, x0, x1: Integer; r, g, b: Byte);
 var
@@ -146,15 +98,14 @@ begin
   p := PixelBase;
   for px := x0 to x1 do
   begin
-    SetPixelUnchecked(px, y, r, g, b);
-    // Note: SetPixelUnchecked calls PixelBase again — the inline
+    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 0] := r;
+    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 1] := g;
+    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 2] := b;
+    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 3] := 255;
     // should optimize the redundant load away with -O3.
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Drawing primitives
-// ---------------------------------------------------------------------------
 
 // Fill the entire pixel buffer with a solid colour.
 // Writes 32-bit words (RGBA packed) instead of 4 individual bytes per pixel.
@@ -227,9 +178,6 @@ begin
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Ball management
-// ---------------------------------------------------------------------------
 procedure SpawnBall(x, y: Single);
 var
   slot, pick: Integer;
@@ -249,30 +197,23 @@ begin
   end;
 
   b := @balls[slot];
-  // Jitter spawn position so rapid clicks at the same spot don't
-  // create perfectly overlapping balls that the collision code skips.
   b^.x      := x + (RngFloat - 0.5) * 12.0;
   b^.y      := y + (RngFloat - 0.5) * 12.0;
   b^.vx     := (RngFloat - 0.5) * 300.0;
   b^.vy     := (RngFloat - 0.5) * 300.0;
   b^.radius := 10.0 + RngFloat * 20.0;
 
-  // Neon colours
   pick := Integer(RngNext mod 6);
   case pick of
-    0: begin b^.r :=   0; b^.g := 255; b^.b := 255; end;  // cyan
-    1: begin b^.r := 255; b^.g := 100; b^.b := 200; end;  // pink
-    2: begin b^.r := 100; b^.g := 255; b^.b :=  50; end;  // lime
-    3: begin b^.r := 255; b^.g := 200; b^.b :=   0; end;  // amber
-    4: begin b^.r := 100; b^.g := 150; b^.b := 255; end;  // periwinkle
-  else
-    begin b^.r := 255; b^.g :=  60; b^.b :=  60; end;  // red
+    0: begin b^.r:=0;   b^.g:=255; b^.b:=255; end;
+    1: begin b^.r:=255; b^.g:=100; b^.b:=200; end;
+    2: begin b^.r:=100; b^.g:=255; b^.b:=50;  end;
+    3: begin b^.r:=255; b^.g:=200; b^.b:=0;   end;
+    4: begin b^.r:=100; b^.g:=150; b^.b:=255; end;
+    else begin b^.r:=255; b^.g:=60;  b^.b:=60;  end;
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Physics
-// ---------------------------------------------------------------------------
 procedure UpdateBalls(dt: Single);
 var
   i, j, idx_a, idx_b: Integer;
@@ -287,30 +228,10 @@ begin
     a^.x := a^.x + a^.vx * dt;
     a^.y := a^.y + a^.vy * dt;
 
-    // Wall bounce — right
-    if a^.x + a^.radius > WIDTH then
-    begin
-      a^.x := WIDTH - a^.radius;
-      a^.vx := -a^.vx;
-    end;
-    // Wall bounce — left
-    if a^.x - a^.radius < 0 then
-    begin
-      a^.x := a^.radius;
-      a^.vx := -a^.vx;
-    end;
-    // Wall bounce — bottom
-    if a^.y + a^.radius > HEIGHT then
-    begin
-      a^.y := HEIGHT - a^.radius;
-      a^.vy := -a^.vy;
-    end;
-    // Wall bounce — top
-    if a^.y - a^.radius < 0 then
-    begin
-      a^.y := a^.radius;
-      a^.vy := -a^.vy;
-    end;
+      if a^.x + a^.radius > WIDTH  then begin a^.x := WIDTH - a^.radius;  a^.vx := -a^.vx; end;
+      if a^.x - a^.radius < 0     then begin a^.x := a^.radius;         a^.vx := -a^.vx; end;
+      if a^.y + a^.radius > HEIGHT then begin a^.y := HEIGHT - a^.radius; a^.vy := -a^.vy; end;
+      if a^.y - a^.radius < 0     then begin a^.y := a^.radius;         a^.vy := -a^.vy; end;
   end;
 
   // Collision detection — O(n^2) elastic collision between equal-mass circles
@@ -349,10 +270,9 @@ begin
       dvy := a^.vy - b^.vy;
       vn := dvx * nx + dvy * ny;
 
-      // Always separate overlapping balls — fixes balls that spawn already
-      // overlapping, which the velocity check alone would never resolve.
+          // overlapping, which the velocity check alone would never resolve.
       overlap := min_dist - dist;
-      push := overlap * 0.5 + 0.1;  // tiny extra nudge to prevent sticking
+      push := overlap * 0.5 + 0.1;
       a^.x := a^.x + push * nx;
       a^.y := a^.y + push * ny;
       b^.x := b^.x - push * nx;
@@ -388,16 +308,12 @@ begin
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Exported API — called from JavaScript
-// ---------------------------------------------------------------------------
 
 procedure wasm_init;
 var
   i: LongInt;
   p: PByte;
 begin
-  // Zero the pixel buffer
   p := PixelBase;
   for i := 0 to BUF_SIZE - 1 do
     p[i] := 0;
@@ -405,19 +321,15 @@ begin
   ballCount := 0;
   ballHead  := 0;
 
-  // Seed with initial balls spread across the canvas
   for i := 1 to 6 do
     SpawnBall(100.0 + RngFloat * 600.0, 80.0 + RngFloat * 440.0);
 end;
 
 procedure wasm_update(dt: Single);
 begin
-  // Cap: prevents tunnelling on a frozen/slow tab
   if dt > 0.1   then dt := 0.1;
-  // Floor: also covers zero, negative, and near-zero dt
   if dt < 0.001 then dt := 0.001;
 
-  // Order matters: clear first so DrawBalls() always writes into a fresh frame.
   ClearScreen(10, 5, 20);
 
   UpdateBalls(dt);
@@ -444,9 +356,6 @@ begin
   wasm_get_height := HEIGHT;
 end;
 
-// ---------------------------------------------------------------------------
-// Export table
-// ---------------------------------------------------------------------------
 exports
   wasm_init       name 'wasm_init',
   wasm_update     name 'wasm_update',
