@@ -47,7 +47,7 @@ static uint8_t pixels[BUF_SIZE];
 // ---------------------------------------------------------------------------
 // Ball physics
 // ---------------------------------------------------------------------------
-#define MAX_BALLS 24
+#define MAX_BALLS 100
 
 typedef struct {
     float x, y;
@@ -175,8 +175,10 @@ static void spawn_ball(float x, float y) {
     }
 
     Ball* b = &balls[ball_count++];
-    b->x      = x;
-    b->y      = y;
+    // Jitter spawn position so rapid clicks at the same spot don't
+    // create perfectly overlapping balls that the collision code skips.
+    b->x      = x + (rng_float() - 0.5f) * 12.0f;
+    b->y      = y + (rng_float() - 0.5f) * 12.0f;
     b->vx     = (rng_float() - 0.5f) * 300.0f;
     b->vy     = (rng_float() - 0.5f) * 300.0f;
     b->radius = 10.0f + rng_float() * 20.0f;
