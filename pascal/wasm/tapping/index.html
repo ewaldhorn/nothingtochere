@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tapping — neon balls in Pascal + WASM</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #0a0514;
+            margin: 0;
+            font-family: monospace;
+            color: #888;
+        }
+        canvas {
+            border: 1px solid #334;
+            box-shadow: 0 0 30px rgba(100,80,180,0.2);
+            cursor: crosshair;
+        }
+        p { margin-top: 12px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <p id="status">Loading WASM...</p>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+
+        let wasmExports = null;
+        let wasmMemory = null;
+
+        // FPC's wasm32-embedded target exports memory; only needs _haltproc from host.
+        const importObject = {
+            env: {
+                _haltproc: (exitCode) => {
+                    console.error('FPC halted with exit code:', exitCode);
+                }
+            }
+        };
+
+        function onInstance(instance) {
+            wasmExports = instance.exports;
+            wasmMemory = wasmExports.memory;
+
+            const imageData = ctx.createImageData(canvas.width, canvas.height);
+            const bufSize = canvas.width * canvas.height * 4;
+
+            // Init and verify
+            wasmExports.wasm_init();
+            const bufPtr = wasmExports.wasm_get_pixels();
+
+            if (!wasmMemory || bufPtr + bufSize > wasmMemory.buffer.byteLength) {
+                throw new Error('Pixel buffer at ' + bufPtr + ' overflows memory');
+            }
+
+            status.textContent = 'Click anywhere to spawn balls';
+
+            let lastTime = performance.now();
+
+            function step(timestamp) {
+                try {
+                    const dt = (timestamp - lastTime) / 1000;
+                    lastTime = timestamp;
+
+                    wasmExports.wasm_update(dt);
+
+                    const view = new Uint8Array(wasmMemory.buffer, bufPtr, bufSize);
+                    imageData.data.set(view);
+                    ctx.putImageData(imageData, 0, 0);
+                } catch (e) {
+                    console.error('Frame error:', e);
+                }
+                requestAnimationFrame(step);
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // Load: try streaming (fast), fall back to byte fetch
+        fetch('basic_canvas.wasm')
+            .then(resp => {
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+                const ct = resp.headers.get('Content-Type') || '';
+                if (ct.includes('application/wasm')) {
+                    // Streaming works with well-typed responses
+                    return WebAssembly.instantiateStreaming(resp, importObject)
+                        .then(r => onInstance(r.instance));
+                }
+
+                // Fallback: fetch raw bytes and compile
+                return resp.arrayBuffer()
+                    .then(buf => WebAssembly.instantiate(buf, importObject))
+                    .then(r => onInstance(r.instance));
+            })
+            .catch(err => {
+                console.error('Load failed:', err);
+                status.textContent = 'Error: ' + err.message;
+                document.body.innerHTML +=
+                    '<p style="color:red; text-align:center">Failed: ' + err.message + '</p>';
+            });
+
+        // Click handler
+        canvas.addEventListener('click', (e) => {
+            if (!wasmExports) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top)  * scaleY);
+            wasmExports.wasm_click(x, y);
+        });
+    </script>
+</body>
+</html>
