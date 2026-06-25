@@ -72,20 +72,6 @@ zig build-lib \
 - `-dynamic` — produce a shared library with an export section. Side effect: memory is imported from the host rather than exported.
 - `-fPIC` — position-independent code (required by `wasm-ld` for dynamic WASM).
 
-### Why the binary is so small
-
-The pixel buffer (`800 × 600 × 4 = 1.92 MB`) used to be a static array, which WASM embeds as a data segment — raw zero bytes in the file. It now lives as a pointer, allocated at a known offset in the JS-provided memory and zeroed at runtime. The binary dropped from 1.9 MB to 5.6 KB.
-
-## Key numbers
-
-| Metric | Value |
-|---|---|
-| Canvas | 800 × 600 px, 32-bit RGBA |
-| Ball cap | 100 |
-| Collision pairs/frame (worst) | ~5,000 (O(n²), 100 balls) |
-| WASM binary | ~5.6 KB |
-| Memory footprint | 2 MB (32 pages) |
-
 ## Requirements
 
 - **Zig** 0.13+ (tested with 0.16.0)
