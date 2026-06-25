@@ -335,8 +335,8 @@ begin
       // Extremely close? nudge apart (guard against division-by-zero)
       if dist_sq < 0.0001 then
       begin
-        a^.x := a^.x - 0.5;
-        b^.x := b^.x + 0.5;
+        a^.x := a^.x + 0.5;
+        b^.x := b^.x - 0.5;
         Continue;
       end;
 
@@ -352,14 +352,14 @@ begin
       // Always separate overlapping balls — fixes balls that spawn already
       // overlapping, which the velocity check alone would never resolve.
       overlap := min_dist - dist;
-      push := overlap * 0.5 + 0.5;  // tiny extra nudge — keep as 0.5 (same as C's 0.5f)
-      a^.x := a^.x - push * nx;
-      a^.y := a^.y - push * ny;
-      b^.x := b^.x + push * nx;
-      b^.y := b^.y + push * ny;
+      push := overlap * 0.5 + 0.1;  // tiny extra nudge to prevent sticking
+      a^.x := a^.x + push * nx;
+      a^.y := a^.y + push * ny;
+      b^.x := b^.x - push * nx;
+      b^.y := b^.y - push * ny;
 
       // Only swap velocities if balls are approaching each other.
-      if vn > 0.0 then
+      if vn < 0.0 then
       begin
         a^.vx := a^.vx - vn * nx;
         a^.vy := a^.vy - vn * ny;
