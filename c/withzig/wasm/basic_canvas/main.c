@@ -9,9 +9,6 @@
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int   uint32_t;
-typedef signed int     int32_t;
-
-#define NULL ((void*)0)
 
 // ---------------------------------------------------------------------------
 // Minimal freestanding stubs
@@ -53,7 +50,8 @@ typedef struct {
 } Ball;
 
 static Ball balls[MAX_BALLS];
-static int   ball_count = 0;
+static int   ball_count = 0;  // number of active balls (0..MAX_BALLS)
+static int   ball_head  = 0;  // ring-buffer index of the oldest ball
 
 // ---------------------------------------------------------------------------
 // PRNG — xorshift32 (deterministic, fast, no libc needed)
@@ -188,15 +186,18 @@ static void draw_filled_circle(int cx, int cy, int radius,
 // Ball management
 // ---------------------------------------------------------------------------
 static void spawn_ball(float x, float y) {
-    if (ball_count >= MAX_BALLS) {
-        // Recycle oldest ball
-        for (int i = 0; i < MAX_BALLS - 1; i++) {
-            balls[i] = balls[i + 1];
-        }
-        ball_count = MAX_BALLS - 1;
+    int slot;
+    if (ball_count < MAX_BALLS) {
+        // Ring not full: append at the next free slot.
+        slot = (ball_head + ball_count) % MAX_BALLS;
+        ball_count++;
+    } else {
+        // Ring full: overwrite the oldest ball and advance the head — O(1).
+        slot = ball_head;
+        ball_head = (ball_head + 1) % MAX_BALLS;
     }
 
-    Ball* b = &balls[ball_count++];
+    Ball* b = &balls[slot];
     // Jitter spawn position so rapid clicks at the same spot don't
     // create perfectly overlapping balls that the collision code skips.
     b->x      = x + (rng_float() - 0.5f) * 12.0f;
@@ -220,14 +221,14 @@ static void spawn_ball(float x, float y) {
 static void update_balls(float dt) {
     // ---- Move all balls ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[i];
+        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
         b->x += b->vx * dt;
         b->y += b->vy * dt;
     }
 
     // ---- Wall collisions ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[i];
+        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
 
         if (b->x - b->radius < 0)      { b->x = b->radius;          b->vx = -b->vx; }
         if (b->x + b->radius > WIDTH)  { b->x = WIDTH - b->radius;  b->vx = -b->vx; }
@@ -237,10 +238,10 @@ static void update_balls(float dt) {
 
     // ---- Ball-ball collisions (equal-mass elastic) ----
     for (int i = 0; i < ball_count; i++) {
-        Ball* a = &balls[i];
+        Ball* a = &balls[(ball_head + i) % MAX_BALLS];
 
         for (int j = i + 1; j < ball_count; j++) {
-            Ball* b = &balls[j];
+            Ball* b = &balls[(ball_head + j) % MAX_BALLS];
 
             float dx = b->x - a->x;
             float dy = b->y - a->y;
@@ -248,7 +249,10 @@ static void update_balls(float dt) {
             float min_dist = a->radius + b->radius;
 
             if (dist_sq >= min_dist * min_dist) continue;
-            if (dist_sq < 0.0001f) {  // avoid division by zero; nudge apart
+            // Safety net: two balls are essentially coincident (dist < 0.01 px).
+            // This can't normally be reached after the first frame because min_dist >= 20,
+            // but it guards against division-by-zero if balls ever spawn at the same spot.
+            if (dist_sq < 0.0001f) {
                 a->x -= 0.5f;
                 b->x += 0.5f;
                 continue;
@@ -285,10 +289,12 @@ static void update_balls(float dt) {
 
 static void draw_balls(void) {
     for (int i = 0; i < ball_count; i++) {
-        Ball* b = &balls[i];
+        Ball* b = &balls[(ball_head + i) % MAX_BALLS];
         int r = (int)b->radius;
-        draw_filled_circle((int)b->x, (int)b->y, r, b->r, b->g, b->b);
-        draw_circle((int)b->x, (int)b->y, r, 255, 255, 255);
+        if (r > 0) {
+            draw_filled_circle((int)b->x, (int)b->y, r, b->r, b->g, b->b);
+            draw_circle((int)b->x, (int)b->y, r, 255, 255, 255);
+        }
     }
 }
 
@@ -299,10 +305,13 @@ static void draw_balls(void) {
 __attribute__((export_name("wasm_init")))
 void wasm_init(void) {
     // Place pixel buffer at a fixed offset past static data.
-    // 64KB is far beyond our ~8KB of static data (balls array, etc.).
+    // 64KB is safely beyond our ~8KB of static data (balls array, etc.).
+    // If static data grows significantly, verify the Zig build's --initial-memory
+    // and segment layout to ensure no overlap with this fixed offset.
     pixels = (uint8_t*)65536;
     fmemset(pixels, 0, BUF_SIZE);
     ball_count = 0;
+    ball_head  = 0;
 
     // Seed with initial balls spread across the canvas
     for (int i = 0; i < 6; i++) {
@@ -313,10 +322,12 @@ void wasm_init(void) {
 
 __attribute__((export_name("wasm_update")))
 void wasm_update(float dt) {
-    if (dt > 0.1f) dt = 0.1f;
-    if (dt <= 0.0f) dt = 0.016f;
+    if (dt > 0.1f)   dt = 0.1f;   // cap: prevents tunnelling on a frozen/slow tab
+    if (dt < 0.001f) dt = 0.001f; // floor: also covers zero, negative, and near-zero dt
 
-    // Plain dark background
+    // Order matters: clear first so draw_balls() always writes into a fresh frame.
+    // If the JS blit is delayed the canvas will briefly show the previous frame —
+    // preferable to drawing onto stale pixel data.
     clear_screen(10, 5, 20);
 
     update_balls(dt);
