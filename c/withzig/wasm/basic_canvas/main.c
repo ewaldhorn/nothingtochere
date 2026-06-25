@@ -102,16 +102,18 @@ static inline void set_pixel(int x, int y,
 // Drawing primitives
 // ---------------------------------------------------------------------------
 
+// Fill the entire pixel buffer with a solid colour.
+// Writes 32-bit words (RGBA packed) instead of 4 individual bytes per pixel.
+// WASM is little-endian, so the in-memory byte order is R, G, B, A.
 static void clear_screen(uint8_t r, uint8_t g, uint8_t b) {
-    for (int y = 0; y < HEIGHT; y++) {
-        int row = y * WIDTH * 4;
-        for (int x = 0; x < WIDTH; x++) {
-            int idx = row + x * 4;
-            pixels[idx + 0] = r;
-            pixels[idx + 1] = g;
-            pixels[idx + 2] = b;
-            pixels[idx + 3] = 255;
-        }
+    uint32_t color = (uint32_t)r
+                   | ((uint32_t)g << 8)
+                   | ((uint32_t)b << 16)
+                   | (255u << 24);
+    uint32_t* p   = (uint32_t*)pixels;
+    uint32_t count = BUF_SIZE / 4;
+    for (uint32_t i = 0; i < count; i++) {
+        p[i] = color;
     }
 }
 
