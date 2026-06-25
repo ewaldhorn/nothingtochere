@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basic_canvas — C + Zig WASM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0514;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+    }
+    .wrapper {
+      text-align: center;
+    }
+    canvas {
+      border: 2px solid #ff14b0;
+      border-radius: 4px;
+      box-shadow: 0 0 40px rgba(255, 20, 176, 0.3);
+      cursor: crosshair;
+    }
+    .status {
+      color: #888;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    .status.error { color: #ff4466; }
+    .hint {
+      color: #666;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <canvas id="c" width="800" height="600"></canvas>
+  <div id="status" class="status">Loading WASM…</div>
+  <div class="hint">click anywhere to spawn neon balls</div>
+</div>
+
+<script type="module">
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+
+function status(msg, isError) {
+  statusEl.textContent = msg;
+  statusEl.className = isError ? 'status error' : 'status';
+}
+
+(async () => {
+  try {
+    // The Zig -dynamic build imports memory from the host.
+    // We provide it: 256 pages (16MB) is plenty for our 800×600×4 pixel buffer.
+    const memory = new WebAssembly.Memory({ initial: 256, maximum: 256 });
+    const table = new WebAssembly.Table({ initial: 1, element: 'anyfunc' });
+
+    const importObject = {
+      env: {
+        memory,
+        __indirect_function_table: table,
+        // __memory_base: offset in linear memory where static data is placed.
+        // __table_base: starting index for the indirect function table.
+        __memory_base: new WebAssembly.Global({ value: 'i32', mutable: false }, 1024),
+        __table_base: new WebAssembly.Global({ value: 'i32', mutable: false }, 1),
+      }
+    };
+
+    const result = await WebAssembly.instantiateStreaming(
+      fetch('./main.wasm'),
+      importObject
+    );
+    const wasm = result.instance;
+
+    // Get exported C functions (memory is our own reference, not an export)
+    const {
+      wasm_init,
+      wasm_update,
+      wasm_click,
+      wasm_get_pixels,
+      wasm_get_width,
+      wasm_get_height,
+    } = wasm.exports;
+
+    // Init C side
+    wasm_init();
+
+    const w = wasm_get_width();
+    const h = wasm_get_height();
+    const ptr = wasm_get_pixels();
+    const bufSize = w * h * 4;
+
+    status(`Running — ${w}×${h}`, false);
+
+    // Create an ImageData we reuse every frame
+    const imageData = ctx.createImageData(w, h);
+
+    // Animation loop — requestAnimationFrame sends high-res timestamp
+    let lastTime = performance.now();
+
+    function frame(now) {
+      const dt = (now - lastTime) / 1000.0; // seconds
+      lastTime = now;
+
+      // Update C state (draws into pixel buffer)
+      wasm_update(dt);
+
+      // Copy pixel buffer from WASM memory into ImageData
+      const wasmBytes = new Uint8ClampedArray(memory.buffer, ptr, bufSize);
+      imageData.data.set(wasmBytes);
+      ctx.putImageData(imageData, 0, 0);
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+
+    // Mouse click → spawn ball
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = w / rect.width;   // canvas CSS size vs actual pixel size
+      const scaleY = h / rect.height;
+      const cx = (e.clientX - rect.left) * scaleX;
+      const cy = (e.clientY - rect.top) * scaleY;
+      wasm_click(Math.round(cx), Math.round(cy));
+    });
+
+  } catch (err) {
+    status('Failed: ' + err.message, true);
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
