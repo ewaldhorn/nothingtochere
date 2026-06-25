@@ -89,21 +89,23 @@ clang \
     -target wasm32-unknown-unknown \
     -O2 \
     -nostdlib \
+    -fPIC \
     -Wl,--no-entry \
     -Wl,--export-dynamic \
+    -Wl,--experimental-pic \
+    -Wl,--shared \
     -Wl,--allow-undefined \
-    -Wl,--initial-memory=2097152 \
     -fuse-ld=/path/to/wasm-ld \
     -o main.wasm \
     main.c
 ```
 
-- `wasm32-unknown-unknown` — freestanding WASM, no OS ABI.
-- `-nostdlib` — no libc (same as the zig build).
-- `--no-entry` — no `main()`; JS calls the exported functions directly.
-- `--export-dynamic` — honours all `__attribute__((export_name(...)))` annotations.
-- `--initial-memory=2097152` — 32 WASM pages (2 MB). Required because `wasm_init` places the pixel buffer at byte 65536 and writes 800×600×4 = 1,920,000 bytes into it.
-- `-fuse-ld` — tells clang to use `wasm-ld` (from Homebrew `lld`) instead of the default system linker.
+- `-fPIC` — position-independent code; data accesses go through the imported `__memory_base` global, so the module doesn't define its own memory.
+- `--experimental-pic` — enables wasm-ld's PIC relocation support.
+- `--shared` — builds a WASM shared library (mirrors zig's `-dynamic`).
+- `--allow-undefined` — allows imports from JS (memory, function table, globals).
+
+The resulting module **imports** `env.memory` from the JS host, exactly like the zig build, so `index.html` works unchanged with either binary.
 
 The script auto-detects both `clang` and `wasm-ld` across common Homebrew paths (arm64 and x86_64) and `$PATH`.
 

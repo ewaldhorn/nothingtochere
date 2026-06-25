@@ -88,37 +88,30 @@ echo "==> clang  : $CLANG ($("$CLANG" --version | head -1))"
 echo "==> wasm-ld: $WASMLD ($("$WASMLD" --version | head -1))"
 
 # ---------------------------------------------------------------------------
-# 4. Link — wasm-ld → freestanding .wasm module.
+# Build — clang + wasm-ld in PIC shared-library mode.
 #
-# Memory layout (must match what wasm_init() assumes in main.c):
-#   The C code places the pixel buffer at the hardcoded address 65536 (64 KB).
-#   That is safe only if all static data lives BELOW 65536.
+# This mirrors what `zig build-lib -dynamic -fPIC` produces:
+#   -fPIC               — position-independent code; all data accesses go
+#                         through the imported __memory_base global, so the
+#                         module doesn't own memory and doesn't define its own.
+#   --experimental-pic  — enables wasm-ld's PIC relocation support.
+#   --shared            — builds a WASM shared library (like zig's -dynamic).
 #
-#   Homebrew lld defaults to --stack-first, which places the shadow stack in
-#   the first 64 KB and static data starting at 65536 — a direct collision
-#   with the pixel buffer.  clear_screen() would overwrite the `pixels` global
-#   itself (at offset 65552) on every frame, corrupting it silently and
-#   crashing on the next frame.
-#
-#   Fix: --no-stack-first --global-base=1024
-#     * Static data starts at 1024 (~1 KB), matching the zig PIC layout.
-#     * Shadow stack grows downward from the TOP of linear memory (2 MB).
-#     * Pixel buffer at 65536 is safely in heap space above all static data.
-#
-#   initial-memory: pixel buffer needs 65536 + 800×600×4 = 1,985,536 bytes
-#   → 31 WASM pages. We allocate 32 pages (2 MB).  One page = 65536 bytes.
+# The resulting module IMPORTS memory from the JS host (env.memory, 32 pages),
+# exactly like the zig build, so index.html works unchanged with both.
+# No --no-stack-first / --global-base gymnastics needed.
 # ---------------------------------------------------------------------------
-echo "==> Building main.wasm ..."
+echo "==> Building main.wasm (PIC shared) ..."
 "$CLANG" \
     -target wasm32-unknown-unknown \
     -O2 \
     -nostdlib \
+    -fPIC \
     -Wl,--no-entry \
     -Wl,--export-dynamic \
+    -Wl,--experimental-pic \
+    -Wl,--shared \
     -Wl,--allow-undefined \
-    -Wl,--no-stack-first \
-    -Wl,--global-base=1024 \
-    -Wl,--initial-memory=2097152 \
     -fuse-ld="$WASMLD" \
     -o main.wasm \
     main.c
