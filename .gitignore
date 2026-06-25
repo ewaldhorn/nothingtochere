@@ -15,3 +15,5 @@ cpp/wasi/test_compiler/logic.wasm
 c/wasm/reverse_str/module.wasm
 c/withzig/wasm/basic_canvas/.zig-cache
 c/withzig/wasm/basic_canvas/main.wasm
+pascal/wasm/tapping/basic_canvas.o
+pascal/wasm/tapping/basic_canvas.wasm
