@@ -315,9 +315,14 @@ static void draw_balls(void) {
 __attribute__((export_name("wasm_init")))
 void wasm_init(void) {
     // Place pixel buffer at a fixed offset past static data.
-    // 64KB is safely beyond our ~8KB of static data (balls array, etc.).
-    // If static data grows significantly, verify the Zig build's --initial-memory
-    // and segment layout to ensure no overlap with this fixed offset.
+    // 64 KB is safely beyond our ~8 KB of static data (balls array, etc.).
+    //
+    // Memory requirement:
+    //   offset (65536) + BUF_SIZE (800×600×4 = 1 920 000) = 1 985 536 bytes → 31 WASM pages.
+    //   Both build scripts must allocate at least 32 pages (2 MB = 2 097 152 bytes):
+    //     build.sh       — zig uses 16 MB by default (no explicit flag needed)
+    //     build_clang.sh — wasm-ld flag: --initial-memory=2097152
+    //   If WIDTH/HEIGHT change, recalculate and update build_clang.sh accordingly.
     pixels = (uint8_t*)65536;
     fmemset(pixels, 0, BUF_SIZE);
     ball_count = 0;

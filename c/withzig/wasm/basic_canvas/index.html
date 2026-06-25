@@ -76,7 +76,10 @@ function status(msg, isError) {
     );
     const wasm = result.instance;
 
-    // Get exported C functions (memory is our own reference, not an export)
+    // Get exported C functions.
+    // Memory: zig imports it from JS (use our `memory` object);
+    //         clang exports its own (use wasm.exports.memory).
+    const activeMemory = wasm.exports.memory ?? memory;
     const {
       wasm_init,
       wasm_update,
@@ -110,7 +113,7 @@ function status(msg, isError) {
       wasm_update(dt);
 
       // Copy pixel buffer from WASM memory into ImageData
-      const wasmBytes = new Uint8ClampedArray(memory.buffer, ptr, bufSize);
+      const wasmBytes = new Uint8ClampedArray(activeMemory.buffer, ptr, bufSize);
       imageData.data.set(wasmBytes);
       ctx.putImageData(imageData, 0, 0);
 

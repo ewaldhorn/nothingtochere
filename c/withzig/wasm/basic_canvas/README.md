@@ -1,24 +1,34 @@
 # basic_canvas
 
-Bouncing neon balls with elastic collision — written in freestanding C, compiled to WebAssembly with Zig. No libc, no math library, no runtime. ~5.6 KB `.wasm` binary.
+Bouncing neon balls with elastic collision — written in freestanding C, compiled to WebAssembly. No libc, no math library, no runtime. Two build paths: **Zig** (`build.sh`) and **clang + lld** (`build_clang.sh`).
 
 ```
 basic_canvas/
 ├── main.c          C source (freestanding — no #includes)
 ├── index.html      Browser shell: canvas, WASM loader, animation loop
 ├── build.sh        zig build-lib → main.wasm
+├── build_clang.sh  clang + lld wasm-ld → main.wasm (no zig needed)
 ├── run.sh          python3 -m http.server 9000
 ├── _inspect.py     Dump WASM imports/exports without wasm-objdump
 ├── _test.js        Node.js smoke test (no browser needed)
-└── main.wasm       5.6 KB (1.9 MB before we moved the pixel buffer out)
+└── main.wasm       ~3.6–9.4 KB depending on toolchain
 ```
 
 ## Quick start
 
+**With Zig:**
 ```bash
 chmod +x build.sh run.sh
-./build.sh          # Zig → main.wasm
+./build.sh          # zig build-lib → main.wasm
 ./run.sh            # Serves on http://localhost:9000
+```
+
+**With clang + lld** (no zig required):
+```bash
+# macOS: brew install llvm lld
+chmod +x build_clang.sh run.sh
+./build_clang.sh    # clang + wasm-ld → main.wasm
+./run.sh
 ```
 
 Open the URL. Click anywhere to spawn balls. They bounce off walls and each other.
@@ -56,7 +66,7 @@ node _test.js
 - Runs `requestAnimationFrame` loop: calls `wasm_update(dt)`, copies the pixel buffer into an `ImageData`, and puts it on the canvas.
 - Click handler scales mouse coordinates to canvas pixel space and calls `wasm_click`.
 
-### Build (`build.sh`)
+### Build (`build.sh` — Zig)
 
 ```bash
 zig build-lib \
@@ -72,8 +82,39 @@ zig build-lib \
 - `-dynamic` — produce a shared library with an export section. Side effect: memory is imported from the host rather than exported.
 - `-fPIC` — position-independent code (required by `wasm-ld` for dynamic WASM).
 
+### Build (`build_clang.sh` — clang + lld)
+
+```bash
+clang \
+    -target wasm32-unknown-unknown \
+    -O2 \
+    -nostdlib \
+    -Wl,--no-entry \
+    -Wl,--export-dynamic \
+    -Wl,--allow-undefined \
+    -Wl,--initial-memory=2097152 \
+    -fuse-ld=/path/to/wasm-ld \
+    -o main.wasm \
+    main.c
+```
+
+- `wasm32-unknown-unknown` — freestanding WASM, no OS ABI.
+- `-nostdlib` — no libc (same as the zig build).
+- `--no-entry` — no `main()`; JS calls the exported functions directly.
+- `--export-dynamic` — honours all `__attribute__((export_name(...)))` annotations.
+- `--initial-memory=2097152` — 32 WASM pages (2 MB). Required because `wasm_init` places the pixel buffer at byte 65536 and writes 800×600×4 = 1,920,000 bytes into it.
+- `-fuse-ld` — tells clang to use `wasm-ld` (from Homebrew `lld`) instead of the default system linker.
+
+The script auto-detects both `clang` and `wasm-ld` across common Homebrew paths (arm64 and x86_64) and `$PATH`.
+
 ## Requirements
 
-- **Zig** 0.13+ (tested with 0.16.0)
-- **Python** 3.x (for `run.sh`; any HTTP server works)
-- **Node.js** (optional, for `_test.js`)
+| | `build.sh` (Zig) | `build_clang.sh` (clang) |
+|---|---|---|
+| **Compiler** | `brew install zig` | `brew install llvm` |
+| **Linker** | bundled with zig | `brew install lld` |
+| **Server** | `python3` (any HTTP server) | same |
+| **Smoke test** | `node` (optional) | same |
+
+- Tested with Zig 0.16.0, Homebrew clang 22.1.8, Homebrew lld 22.1.8.
+- Apple's bundled clang (Xcode / CLT) does **not** include the WebAssembly backend — Homebrew LLVM is required for `build_clang.sh`.
