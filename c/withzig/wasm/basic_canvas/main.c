@@ -22,14 +22,9 @@ static void* fmemset(void* s, int c, uint32_t n) {
     return s;
 }
 
-// Newton's method — fast enough for infrequent collision resolution.
-static float fsqrt(float x) {
-    if (x <= 0.0f) return 0.0f;
-    float guess = x;
-    for (int i = 0; i < 10; i++) {
-        guess = (guess + x / guess) * 0.5f;
-    }
-    return guess;
+// Compiler builtin maps to a single f32.sqrt WASM opcode — far faster than Newton's method.
+static inline float fsqrt(float x) {
+    return __builtin_sqrtf(x);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +43,7 @@ static uint8_t* pixels;
 // ---------------------------------------------------------------------------
 // Ball physics
 // ---------------------------------------------------------------------------
-#define MAX_BALLS 100
+#define MAX_BALLS 300
 
 typedef struct {
     float x, y;
@@ -74,7 +69,8 @@ static uint32_t rng_next(void) {
 }
 
 static float rng_float(void) {
-    return (float)(rng_next() & 0xFFFFFF) / (float)(0xFFFFFF + 1);
+    // Shift to 24 bits; divide by 2^24 for a uniform [0, 1) float.
+    return (float)(rng_next() >> 8) / 16777216.0f;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +79,7 @@ static float rng_float(void) {
 static inline void set_pixel(int x, int y,
                              uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     if ((uint32_t)x >= WIDTH || (uint32_t)y >= HEIGHT) return;
-    int idx = (y * WIDTH + x) * 4;
+    uint32_t idx = ((uint32_t)y * WIDTH + (uint32_t)x) * 4u;
     if (a == 255) {
         pixels[idx + 0] = r;
         pixels[idx + 1] = g;
@@ -96,6 +92,26 @@ static inline void set_pixel(int x, int y,
         pixels[idx + 2] = (uint8_t)(((uint16_t)b * a + (uint16_t)pixels[idx + 2] * inv) / 255);
         pixels[idx + 3] = 255;
     }
+}
+
+// Unchecked write — caller guarantees 0 <= x < WIDTH, 0 <= y < HEIGHT.
+static inline void set_pixel_unchecked(int x, int y,
+                                        uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t idx = ((uint32_t)y * WIDTH + (uint32_t)x) * 4u;
+    pixels[idx + 0] = r;
+    pixels[idx + 1] = g;
+    pixels[idx + 2] = b;
+    pixels[idx + 3] = 255;
+}
+
+// Fill a horizontal span, clamping x to [0, WIDTH-1] — one bounds check per row, not per pixel.
+static inline void fill_scanline(int y, int x0, int x1,
+                                  uint8_t r, uint8_t g, uint8_t b) {
+    if ((uint32_t)y >= HEIGHT) return;
+    if (x0 < 0) x0 = 0;
+    if (x1 >= (int)WIDTH) x1 = (int)WIDTH - 1;
+    for (int px = x0; px <= x1; px++)
+        set_pixel_unchecked(px, y, r, g, b);
 }
 
 // ---------------------------------------------------------------------------
@@ -144,6 +160,8 @@ static void draw_circle(int cx, int cy, int radius,
 }
 
 // Filled circle
+// Uses fill_scanline (clamped, unchecked inner loop) and skips duplicate rows
+// at y==0 (top/bottom mirror) and x==y (diagonal octant boundary).
 static void draw_filled_circle(int cx, int cy, int radius,
                                uint8_t r, uint8_t g, uint8_t b) {
     int x  = radius;
@@ -151,10 +169,12 @@ static void draw_filled_circle(int cx, int cy, int radius,
     int dp = 1 - radius;
 
     while (x >= y) {
-        for (int px = cx - x; px <= cx + x; px++) set_pixel(px, cy + y, r, g, b, 255);
-        for (int px = cx - x; px <= cx + x; px++) set_pixel(px, cy - y, r, g, b, 255);
-        for (int px = cx - y; px <= cx + y; px++) set_pixel(px, cy + x, r, g, b, 255);
-        for (int px = cx - y; px <= cx + y; px++) set_pixel(px, cy - x, r, g, b, 255);
+        fill_scanline(cy + y, cx - x, cx + x, r, g, b);
+        if (y != 0)
+            fill_scanline(cy - y, cx - x, cx + x, r, g, b);
+        fill_scanline(cy + x, cx - y, cx + y, r, g, b);
+        if (x != y)
+            fill_scanline(cy - x, cx - y, cx + y, r, g, b);
         y++;
         if (dp <= 0) {
             dp += 2 * y + 1;
@@ -245,20 +265,21 @@ static void update_balls(float dt) {
             float dvy = a->vy - b->vy;
             float vn = dvx * nx + dvy * ny;
 
-            // Only resolve if balls are approaching each other
+            // Always separate overlapping balls — fixes balls that spawn already
+            // overlapping, which the velocity check alone would never resolve.
+            float overlap = min_dist - dist;
+            float push = overlap * 0.5f + 0.5f;  // tiny extra nudge
+            a->x -= push * nx;
+            a->y -= push * ny;
+            b->x += push * nx;
+            b->y += push * ny;
+
+            // Only swap velocities if balls are approaching each other.
             if (vn > 0.0f) {
                 a->vx -= vn * nx;
                 a->vy -= vn * ny;
                 b->vx += vn * nx;
                 b->vy += vn * ny;
-
-                // Separate overlapping balls to avoid sticking
-                float overlap = min_dist - dist;
-                float push = overlap * 0.5f + 0.5f;  // tiny extra nudge
-                a->x -= push * nx;
-                a->y -= push * ny;
-                b->x += push * nx;
-                b->y += push * ny;
             }
         }
     }
