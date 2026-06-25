@@ -80,22 +80,15 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// Freestanding sqrt — Newton's method on Single (no math lib dependency)
+// Square root — delegates to FPC's built-in Sqrt, which on wasm32-embedded
+// maps to the f32.sqrt WASM instruction (single uop, IEEE 754 exact).
 // ---------------------------------------------------------------------------
 function FPSqrt(x: Single): Single;
-var
-  g: Single;
-  i: Integer;
 begin
   if x <= 0.0 then
-  begin
-    FPSqrt := 0.0;
-    Exit;
-  end;
-  g := x;
-  for i := 1 to 5 do
-    g := (g + x / g) * 0.5;
-  FPSqrt := g;
+    FPSqrt := 0.0
+  else
+    FPSqrt := Sqrt(x);
 end;
 
 // ---------------------------------------------------------------------------
@@ -359,7 +352,7 @@ begin
       // Always separate overlapping balls — fixes balls that spawn already
       // overlapping, which the velocity check alone would never resolve.
       overlap := min_dist - dist;
-      push := overlap * 0.5 + 0.5;  // tiny extra nudge
+      push := overlap * 0.5 + 0.5;  // tiny extra nudge — keep as 0.5 (same as C's 0.5f)
       a^.x := a^.x - push * nx;
       a^.y := a^.y - push * ny;
       b^.x := b^.x + push * nx;
