@@ -54,9 +54,9 @@ function status(msg, isError) {
 
 (async () => {
   try {
-    // The Zig -dynamic build imports memory from the host.
-    // We provide it: 256 pages (16MB) is plenty for our 800×600×4 pixel buffer.
-    const memory = new WebAssembly.Memory({ initial: 256, maximum: 256 });
+    // Pixel buffer at offset 65536 + 800×600×4 = 1,985,536 bytes → 31 pages.
+    // Round to 32 pages (2MB) — exactly what we need, no waste.
+    const memory = new WebAssembly.Memory({ initial: 32, maximum: 32 });
     const table = new WebAssembly.Table({ initial: 1, element: 'anyfunc' });
 
     const importObject = {
