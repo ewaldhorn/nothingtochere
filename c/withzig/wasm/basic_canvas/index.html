@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>basic_canvas — C + Zig WASM</title>
+  <title>basic_canvas — balls + collisions</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -39,7 +39,7 @@
 <div class="wrapper">
   <canvas id="c" width="800" height="600"></canvas>
   <div id="status" class="status">Loading WASM…</div>
-  <div class="hint">click anywhere to spawn neon balls</div>
+  <div class="hint">click anywhere to spawn balls &middot; they collide</div>
 </div>
 
 <script type="module">

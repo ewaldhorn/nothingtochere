@@ -1,4 +1,4 @@
-// basic_canvas — Synthwave grid + bouncing balls in C, compiled to WASM with Zig.
+// basic_canvas — Bouncing balls with collision in C, compiled to WASM with Zig.
 // All drawing happens in a linear RGBA pixel buffer. JS blits it to a <canvas>.
 //
 // Truly freestanding: no libc headers, no math library. Only compiler builtins.
@@ -22,8 +22,14 @@ static void* fmemset(void* s, int c, uint32_t n) {
     return s;
 }
 
-static int fabs(int x) {
-    return x < 0 ? -x : x;
+// Newton's method — fast enough for infrequent collision resolution.
+static float fsqrt(float x) {
+    if (x <= 0.0f) return 0.0f;
+    float guess = x;
+    for (int i = 0; i < 10; i++) {
+        guess = (guess + x / guess) * 0.5f;
+    }
+    return guess;
 }
 
 // ---------------------------------------------------------------------------
@@ -39,7 +45,7 @@ static int fabs(int x) {
 static uint8_t pixels[BUF_SIZE];
 
 // ---------------------------------------------------------------------------
-// Ball physics (matching godom's vibe)
+// Ball physics
 // ---------------------------------------------------------------------------
 #define MAX_BALLS 24
 
@@ -55,13 +61,6 @@ static Ball balls[MAX_BALLS];
 static int   ball_count = 0;
 
 // ---------------------------------------------------------------------------
-// Grid / synthwave state
-// ---------------------------------------------------------------------------
-static float grid_offset  = 0.0f;
-static float grid_speed   = 60.0f;   // pixels per second
-static int   grid_spacing = 44;
-
-// ---------------------------------------------------------------------------
 // PRNG — xorshift32 (deterministic, fast, no libc needed)
 // ---------------------------------------------------------------------------
 static uint32_t rng_state = 0xDEADBEEF;
@@ -75,40 +74,6 @@ static uint32_t rng_next(void) {
 
 static float rng_float(void) {
     return (float)(rng_next() & 0xFFFFFF) / (float)(0xFFFFFF + 1);
-}
-
-// ---------------------------------------------------------------------------
-// Precomputed sine table for ray angles (avoids <math.h>)
-// 128 entries covering 0..2π
-// ---------------------------------------------------------------------------
-#define SIN_TABLE_SIZE 128
-static float sin_table[SIN_TABLE_SIZE];
-
-static void build_sin_table(void) {
-    // Taylor series for sin: x - x³/6 + x⁵/120
-    for (int i = 0; i < SIN_TABLE_SIZE; i++) {
-        float t = (float)i * 6.283185307f / (float)SIN_TABLE_SIZE;  // 2π * i/N
-        float t2 = t * t;
-        float t3 = t2 * t;
-        float t5 = t3 * t2;
-        sin_table[i] = t - t3 / 6.0f + t5 / 120.0f;
-    }
-}
-
-static float fsin(float x) {
-    // Normalize x to [0, 2π)
-    float two_pi = 6.283185307f;
-    while (x < 0.0f) x += two_pi;
-    while (x >= two_pi) x -= two_pi;
-    float idx_f = x * (float)SIN_TABLE_SIZE / two_pi;
-    int idx = (int)idx_f;
-    if (idx >= SIN_TABLE_SIZE - 1) idx = SIN_TABLE_SIZE - 2;
-    float frac = idx_f - (float)idx;
-    return sin_table[idx] * (1.0f - frac) + sin_table[idx + 1] * frac;
-}
-
-static float fcos(float x) {
-    return fsin(x + 1.570796327f);  // cos(x) = sin(x + π/2)
 }
 
 // ---------------------------------------------------------------------------
@@ -146,24 +111,6 @@ static void clear_screen(uint8_t r, uint8_t g, uint8_t b) {
             pixels[idx + 2] = b;
             pixels[idx + 3] = 255;
         }
-    }
-}
-
-// Bresenham line
-static void draw_line(int x1, int y1, int x2, int y2,
-                      uint8_t r, uint8_t g, uint8_t b) {
-    int dx  = fabs(x2 - x1);
-    int dy  = -fabs(y2 - y1);
-    int sx  = x1 < x2 ? 1 : -1;
-    int sy  = y1 < y2 ? 1 : -1;
-    int err = dx + dy;
-
-    for (;;) {
-        set_pixel(x1, y1, r, g, b, 255);
-        if (x1 == x2 && y1 == y2) break;
-        int e2 = 2 * err;
-        if (e2 >= dy) { err += dy; x1 += sx; }
-        if (e2 <= dx) { err += dx; y1 += sy; }
     }
 }
 
@@ -216,76 +163,11 @@ static void draw_filled_circle(int cx, int cy, int radius,
 }
 
 // ---------------------------------------------------------------------------
-// Synthwave grid — perspective lines converging at a vanishing point
-// ---------------------------------------------------------------------------
-static void draw_grid(float offset) {
-    int vx = WIDTH / 2;
-    int vy = HEIGHT - 40;
-
-    uint8_t gr = 0, gg = 230, gb = 247;  // cyan base
-
-    // Horizontal lines — closer together near the horizon (quadratic spacing)
-    int num_h = 28;
-    for (int i = 0; i < num_h; i++) {
-        float t    = (float)i / (float)(num_h - 1);
-        float yf   = 20.0f + t * t * (float)(vy - 20);
-        int   y    = (int)(yf + offset);
-        uint8_t alpha = (uint8_t)(40 + (1.0f - t) * 180);
-        for (int x = 0; x < WIDTH; x++) {
-            set_pixel(x, y, gr, gg, gb, alpha);
-        }
-    }
-
-    // Vertical rays from vanishing point outward (precomputed angles)
-    int num_rays = 38;
-    float angle_start = -3.14159f * 0.42f;
-    float angle_range = 3.14159f * 0.84f;
-    for (int i = 0; i < num_rays; i++) {
-        float angle = angle_start + (float)i * angle_range / (float)(num_rays - 1);
-        uint8_t alpha = (uint8_t)(30 + (rng_next() % 40));
-        int dx = (int)(fcos(angle) * 1200.0f);
-        int dy = (int)(-fsin(angle) * 500.0f);
-        int ex = vx + dx;
-        int ey = vy + dy;
-        if (ey < 0) ey = 0;
-        draw_line(vx, vy, ex, ey, gr, gg, gb);
-    }
-}
-
-// Neon sun near the horizon
-static void draw_sun(float offset) {
-    int sx = WIDTH / 2;
-    int sy = HEIGHT - 80 + (int)(offset * 0.3f);
-    if (sy < HEIGHT - 160) sy = HEIGHT - 160;
-
-    draw_filled_circle(sx, sy, 70, 255, 80, 0);
-    draw_filled_circle(sx, sy, 50, 255, 140, 20);
-    draw_filled_circle(sx, sy, 34, 255, 200, 80);
-
-    // Cut off bottom half (sun below horizon)
-    int cut_y = sy + 34;
-    for (int y = cut_y; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            int idx = (y * WIDTH + x) * 4;
-            pixels[idx + 0] = 10;
-            pixels[idx + 1] = 5;
-            pixels[idx + 2] = 20;
-            pixels[idx + 3] = 255;
-        }
-    }
-
-    // Horizon line
-    int hy = sy + 34;
-    for (int x = 0; x < WIDTH; x++) {
-        set_pixel(x, hy, 255, 50, 180, 200);
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Ball management
 // ---------------------------------------------------------------------------
 static void spawn_ball(float x, float y) {
     if (ball_count >= MAX_BALLS) {
+        // Recycle oldest ball
         for (int i = 0; i < MAX_BALLS - 1; i++) {
             balls[i] = balls[i + 1];
         }
@@ -302,28 +184,78 @@ static void spawn_ball(float x, float y) {
     // Neon colours
     int pick = (int)(rng_next() % 6);
     switch (pick) {
-        case 0: b->r = 0;   b->g = 240; b->b = 220; break;
-        case 1: b->r = 255; b->g = 0;   b->b = 180; break;
-        case 2: b->r = 255; b->g = 230; b->b = 0;   break;
-        case 3: b->r = 255; b->g = 100; b->b = 0;   break;
-        case 4: b->r = 160; b->g = 0;   b->b = 255; break;
-        case 5: b->r = 0;   b->g = 255; b->b = 100; break;
+        case 0: b->r = 0;   b->g = 240; b->b = 220; break; // cyan
+        case 1: b->r = 255; b->g = 0;   b->b = 180; break; // hot pink
+        case 2: b->r = 255; b->g = 230; b->b = 0;   break; // yellow
+        case 3: b->r = 255; b->g = 100; b->b = 0;   break; // orange
+        case 4: b->r = 160; b->g = 0;   b->b = 255; break; // purple
+        case 5: b->r = 0;   b->g = 255; b->b = 100; break; // green
     }
     b->alive = 1;
 }
 
 static void update_balls(float dt) {
+    // ---- Move all balls ----
+    for (int i = 0; i < ball_count; i++) {
+        Ball* b = &balls[i];
+        if (!b->alive) continue;
+        b->x += b->vx * dt;
+        b->y += b->vy * dt;
+    }
+
+    // ---- Wall collisions ----
     for (int i = 0; i < ball_count; i++) {
         Ball* b = &balls[i];
         if (!b->alive) continue;
 
-        b->x += b->vx * dt;
-        b->y += b->vy * dt;
-
-        if (b->x - b->radius < 0)      { b->x = b->radius;        b->vx = -b->vx; }
-        if (b->x + b->radius > WIDTH)  { b->x = WIDTH - b->radius; b->vx = -b->vx; }
-        if (b->y - b->radius < 0)      { b->y = b->radius;         b->vy = -b->vy; }
+        if (b->x - b->radius < 0)      { b->x = b->radius;          b->vx = -b->vx; }
+        if (b->x + b->radius > WIDTH)  { b->x = WIDTH - b->radius;  b->vx = -b->vx; }
+        if (b->y - b->radius < 0)      { b->y = b->radius;          b->vy = -b->vy; }
         if (b->y + b->radius > HEIGHT) { b->y = HEIGHT - b->radius; b->vy = -b->vy; }
+    }
+
+    // ---- Ball-ball collisions (equal-mass elastic) ----
+    for (int i = 0; i < ball_count; i++) {
+        Ball* a = &balls[i];
+        if (!a->alive) continue;
+
+        for (int j = i + 1; j < ball_count; j++) {
+            Ball* b = &balls[j];
+            if (!b->alive) continue;
+
+            float dx = b->x - a->x;
+            float dy = b->y - a->y;
+            float dist_sq = dx * dx + dy * dy;
+            float min_dist = a->radius + b->radius;
+
+            if (dist_sq >= min_dist * min_dist) continue;
+            if (dist_sq < 0.0001f) continue;  // avoid division by zero
+
+            float dist = fsqrt(dist_sq);
+            float nx = dx / dist;
+            float ny = dy / dist;
+
+            // Relative velocity along the collision normal
+            float dvx = a->vx - b->vx;
+            float dvy = a->vy - b->vy;
+            float vn = dvx * nx + dvy * ny;
+
+            // Only resolve if balls are approaching each other
+            if (vn > 0.0f) {
+                a->vx -= vn * nx;
+                a->vy -= vn * ny;
+                b->vx += vn * nx;
+                b->vy += vn * ny;
+
+                // Separate overlapping balls to avoid sticking
+                float overlap = min_dist - dist;
+                float push = overlap * 0.5f + 0.5f;  // tiny extra nudge
+                a->x -= push * nx;
+                a->y -= push * ny;
+                b->x += push * nx;
+                b->y += push * ny;
+            }
+        }
     }
 }
 
@@ -343,13 +275,13 @@ static void draw_balls(void) {
 
 __attribute__((export_name("wasm_init")))
 void wasm_init(void) {
-    build_sin_table();
     fmemset(pixels, 0, BUF_SIZE);
     ball_count = 0;
 
+    // Seed with initial balls spread across the canvas
     for (int i = 0; i < 6; i++) {
         spawn_ball(100.0f + rng_float() * 600.0f,
-                   80.0f + rng_float() * 300.0f);
+                   80.0f + rng_float() * 440.0f);
     }
 }
 
@@ -358,14 +290,9 @@ void wasm_update(float dt) {
     if (dt > 0.1f) dt = 0.1f;
     if (dt <= 0.0f) dt = 0.016f;
 
-    grid_offset += grid_speed * dt;
-    if (grid_offset > (float)grid_spacing) {
-        grid_offset -= (float)grid_spacing;
-    }
-
+    // Plain dark background
     clear_screen(10, 5, 20);
-    draw_grid(grid_offset);
-    draw_sun(grid_offset);
+
     update_balls(dt);
     draw_balls();
 }
