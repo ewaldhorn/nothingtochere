@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncer — Pascal WASM Xonix Clone</title>
+    <meta name="description"
+        content="Capture territory, avoid bouncing enemies, and survive in this high-performance Pascal WASM clone of the classic DOS game Xonix.">
+
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="game-dashboard" id="app-root">
+        <!-- Dashboard Header / Scoreboard -->
+        <header class="glass-panel" id="scoreboard" aria-label="Game Stats">
+            <div class="stat-box">
+                <span class="stat-label">Score</span>
+                <span class="stat-value" id="score-val">000000</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Area Captured</span>
+                <span class="stat-value" id="area-val">0.0%</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Lives</span>
+                <span class="stat-value" id="lives-val">3</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Level</span>
+                <span class="stat-value" id="level-val">1</span>
+            </div>
+        </header>
+
+        <!-- Canvas Wrapper -->
+        <main class="canvas-wrapper" id="canvas-container">
+            <canvas id="game-canvas" width="1200" height="750"></canvas>
+
+            <!-- Start Screen Overlay -->
+            <div id="start-screen" class="overlay" aria-labelledby="start-title">
+                <div class="glass-card">
+                    <h1 id="start-title">BOUNCER</h1>
+                    <p class="subtitle">A Pascal WASM Arcade Game</p>
+                    <div class="controls-guide">
+                        <p><strong>Controls:</strong> Use Arrow Keys to navigate and capture territory.</p>
+                        <p>Press Enter/Space (or click) to start/restart.</p>
+                        <p>Avoid red bouncing balls in the sea, and orange tracker balls on land!</p>
+                    </div>
+                    <button type="button" id="start-button" class="btn-primary">Start Game</button>
+                </div>
+            </div>
+
+            <!-- Game Over Screen Overlay -->
+            <div id="game-over-screen" class="overlay hidden" aria-labelledby="game-over-title">
+                <div class="glass-card">
+                    <h2 id="game-over-title">GAME OVER</h2>
+                    <p class="final-score-text">Final Score: <span id="final-score-val">0</span></p>
+                    <button type="button" id="restart-button" class="btn-primary">Play Again</button>
+                </div>
+            </div>
+
+            <!-- Level Complete Screen Overlay -->
+            <div id="level-complete-screen" class="overlay hidden" aria-labelledby="level-complete-title">
+                <div class="glass-card">
+                    <h2 id="level-complete-title">LEVEL CLEAR!</h2>
+                    <p class="subtitle">Get ready for Level <span id="next-level-val">2</span></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer info -->
+        <footer class="footer-info">
+            <p>Built with Free Pascal WASM &bull; Win at 75% Captured</p>
+        </footer>
+    </div>
+
+    <script src="bouncer.js" defer></script>
+</body>
+
+</html>

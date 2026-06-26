@@ -1,0 +1,343 @@
+/* style.css — Premium neon glassmorphic theme for Bouncer (Xonix Clone) */
+
+:root {
+    --bg-color: #081433;
+    --card-bg: rgba(12, 18, 38, 0.65);
+    --border-green: rgba(16, 204, 120, 0.2);
+    --border-magenta: rgba(255, 0, 85, 0.2);
+    
+    --text-primary: #ffffff;
+    --text-secondary: #8b92b6;
+    
+    --neon-green: #05a359;
+    --neon-green-glow: rgba(5, 163, 89, 0.35);
+    --neon-magenta: #ff0055;
+    --neon-magenta-glow: rgba(255, 0, 85, 0.35);
+    --neon-purple: #8252fa;
+    --neon-purple-glow: rgba(130, 82, 250, 0.35);
+    
+    --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'Inter', system-ui, monospace;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: radial-gradient(circle at 50% 30%, #122860 0%, var(--bg-color) 80%);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    overflow-x: hidden;
+}
+
+/* Dashboard Container */
+.game-dashboard {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Scoreboard / Glass Panel Header */
+.glass-panel {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-green);
+    border-radius: var(--radius-md);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+    opacity: 0.7;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+#score-val {
+    color: var(--neon-green);
+    text-shadow: 0 0 10px var(--neon-green-glow);
+}
+
+#area-val {
+    color: var(--text-primary);
+}
+
+#lives-val {
+    color: var(--neon-magenta);
+    text-shadow: 0 0 10px var(--neon-magenta-glow);
+}
+
+#level-val {
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px var(--neon-purple-glow);
+}
+
+/* Canvas Wrapper */
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1200 / 750;
+    background-color: #030824;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border-green);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7),
+                0 0 25px rgba(16, 204, 120, 0.08);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: border-color var(--transition-smooth);
+}
+
+.canvas-wrapper:hover {
+    border-color: rgba(16, 204, 120, 0.45);
+}
+
+.canvas-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    image-rendering: pixelated;
+}
+
+/* Overlays (Fills the canvas dimensions) */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 16, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.overlay.hidden {
+    display: none;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* Glass Card */
+.glass-card {
+    background: rgba(16, 17, 36, 0.75);
+    border: 1px solid var(--border-magenta);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8),
+                0 0 30px var(--neon-magenta-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transform: translateY(0);
+    animation: floatIn 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+#game-over-screen .glass-card {
+    border-color: var(--border-magenta);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8),
+                0 0 35px var(--neon-magenta-glow);
+}
+
+#start-screen .glass-card, #level-complete-screen .glass-card {
+    border-color: var(--border-green);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8),
+                0 0 35px var(--neon-green-glow);
+}
+
+/* Card Typography */
+h1, h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+#start-title, #level-complete-title {
+    background: linear-gradient(135deg, #ffffff 30%, var(--neon-green) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 15px rgba(16, 204, 120, 0.25);
+}
+
+#game-over-title {
+    background: linear-gradient(135deg, #ffffff 30%, var(--neon-magenta) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 15px rgba(255, 0, 85, 0.25);
+}
+
+.subtitle {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.controls-guide {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 28px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: left;
+}
+
+.controls-guide strong {
+    color: var(--neon-green);
+}
+
+.final-score-text {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+}
+
+#final-score-val {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--neon-magenta);
+}
+
+/* Premium Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-green) 0%, #00b3ff 100%);
+    color: #070716;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px 32px;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 179, 255, 0.3);
+    transition: all var(--transition-smooth);
+    width: 100%;
+}
+
+#start-screen .btn-primary {
+    background: linear-gradient(135deg, var(--neon-green) 0%, #059669 100%);
+    box-shadow: 0 6px 20px rgba(16, 204, 120, 0.3);
+}
+
+#game-over-screen .btn-primary {
+    background: linear-gradient(135deg, var(--neon-magenta) 0%, #cc0044 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(255, 0, 85, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+#start-screen .btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(16, 204, 120, 0.5);
+}
+
+#game-over-screen .btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(255, 0, 85, 0.5);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+/* Footer Section */
+.footer-info {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 10px;
+}
+
+/* Animations */
+@keyframes floatIn {
+    0% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Scaling */
+@media (max-width: 768px) {
+    .glass-panel {
+        padding: 12px 16px;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    h1, h2 {
+        font-size: 2.2rem;
+    }
+    
+    .glass-card {
+        padding: 24px;
+    }
+}
