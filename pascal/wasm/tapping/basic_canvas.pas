@@ -89,20 +89,21 @@ end;
 // Fill a horizontal span, clamping x to [0, WIDTH-1]
 procedure FillScanline(y, x0, x1: Integer; r, g, b: Byte);
 var
-  px: Integer;
+  px, offset: Cardinal;
   p: PByte;
 begin
   if Cardinal(y) >= HEIGHT then Exit;
   if x0 < 0 then x0 := 0;
   if x1 >= WIDTH then x1 := WIDTH - 1;
   p := PixelBase;
-  for px := x0 to x1 do
+  offset := (Cardinal(y) * WIDTH + Cardinal(x0)) * 4;
+  for px := Cardinal(x0) to Cardinal(x1) do
   begin
-    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 0] := r;
-    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 1] := g;
-    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 2] := b;
-    p[(Cardinal(y) * WIDTH + Cardinal(px)) * 4 + 3] := 255;
-    // should optimize the redundant load away with -O3.
+    p[offset + 0] := r;
+    p[offset + 1] := g;
+    p[offset + 2] := b;
+    p[offset + 3] := 255;
+    Inc(offset, 4);
   end;
 end;
 
@@ -315,8 +316,7 @@ var
   p: PByte;
 begin
   p := PixelBase;
-  for i := 0 to BUF_SIZE - 1 do
-    p[i] := 0;
+  FillChar(p^, BUF_SIZE, 0);
 
   ballCount := 0;
   ballHead  := 0;
