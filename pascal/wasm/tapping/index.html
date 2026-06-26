@@ -107,16 +107,24 @@
                     '<p style="color:red; text-align:center">Failed: ' + err.message + '</p>';
             });
 
-        // Click handler
-        canvas.addEventListener('click', (e) => {
+        // Click/touch handler
+        function handleInput(clientX, clientY) {
             if (!wasmExports) return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width  / rect.width;
             const scaleY = canvas.height / rect.height;
-            const x = Math.floor((e.clientX - rect.left) * scaleX);
-            const y = Math.floor((e.clientY - rect.top)  * scaleY);
+            const x = Math.floor((clientX - rect.left) * scaleX);
+            const y = Math.floor((clientY - rect.top)  * scaleY);
             wasmExports.wasm_click(x, y);
-        });
+        }
+
+        canvas.addEventListener('click', (e) => handleInput(e.clientX, e.clientY));
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            for (const touch of e.changedTouches) {
+                handleInput(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
