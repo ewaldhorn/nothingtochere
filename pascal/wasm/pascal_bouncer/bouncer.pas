@@ -7,6 +7,7 @@ library bouncer;
 {$inline on}
 {$WARN 5025 off}
 
+// ------------------------------------------------------------------------------------------------
 const
   COLS: Integer = 40;
   ROWS: Integer = 25;
@@ -25,6 +26,7 @@ const
 
   MAX_ENEMIES: Integer = 10;
 
+// ------------------------------------------------------------------------------------------------
 type
   TCell = (Sea, Land, Trail);
 
@@ -41,6 +43,7 @@ type
 
   TGameStatus = (StartScreen, Playing, GameOver, LevelUpDelay);
 
+// ------------------------------------------------------------------------------------------------
 var
   grid: array[0..24, 0..39] of TCell;
   player: record
@@ -63,6 +66,7 @@ var
 var
   rngState: Cardinal = 1;
 
+// ------------------------------------------------------------------------------------------------
 function RngNext: Cardinal;
 var
   x: Cardinal;
@@ -75,35 +79,38 @@ begin
   RngNext := x;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function RngInt(maxVal: Integer): Integer;
 begin
   if maxVal <= 0 then RngInt := 0
   else RngInt := RngNext mod maxVal;
 end;
 
-// ── Helper functions ───────────────────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 function CellToPixelX(c: Integer): Integer;
 begin
   CellToPixelX := c * CELL_SIZE;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function CellToPixelY(r: Integer): Integer;
 begin
   CellToPixelY := r * CELL_SIZE;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function MinInt(a, b: Integer): Integer;
 begin
   if a < b then MinInt := a else MinInt := b;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function MaxInt(a, b: Integer): Integer;
 begin
   if a > b then MaxInt := a else MaxInt := b;
 end;
 
-// ── Grid helpers (matching Zig) ──────────────────────────────────────────────
-
+// ------------------------------------------------------------------------------------------------
 procedure ResetGrid;
 var
   c, r: Integer;
@@ -117,6 +124,7 @@ begin
         grid[r, c] := Land;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure ClearTrail;
 var
   c, r: Integer;
@@ -127,6 +135,7 @@ begin
         grid[r, c] := Sea;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function GetPercentCaptured: Integer;
 var
   c, r, landCount: Integer;
@@ -139,6 +148,7 @@ begin
   GetPercentCaptured := (landCount * 100) div (COLS * ROWS);
 end;
 
+// ------------------------------------------------------------------------------------------------
 function CellAt(x, y: Integer): TCell;
 begin
   if (x < 0) or (x >= COLS) or (y < 0) or (y >= ROWS) then
@@ -147,14 +157,14 @@ begin
     CellAt := grid[y, x];
 end;
 
-// ── Enemy helpers ────────────────────────────────────────────────────────────
-
+// ------------------------------------------------------------------------------------------------
 procedure EnemySetGridPos(var e: TEnemyData; gx, gy: Integer);
 begin
   e.pixel_x := gx * CELL_SIZE + (CELL_SIZE - e.size) / 2.0;
   e.pixel_y := gy * CELL_SIZE + (CELL_SIZE - e.size) / 2.0;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function EnemyCheckCollision(e: TEnemyData; testX, testY: Single): Boolean;
 var
   cs: Single;
@@ -177,6 +187,7 @@ begin
   EnemyCheckCollision := False;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function EnemyCheckLandCollision(e: TEnemyData; testX, testY: Single): Boolean;
 var
   cs: Single;
@@ -201,6 +212,7 @@ begin
   EnemyCheckLandCollision := False;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure EnemyEnsureInSea(var e: TEnemyData);
 var
   cs: Single;
@@ -272,6 +284,7 @@ begin
   end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure EnemyEnsureInLand(var e: TEnemyData);
 var
   cs: Single;
@@ -339,6 +352,7 @@ begin
   end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function EnemyThreatensPlayer(e: TEnemyData): Boolean;
 var
   cs: Single;
@@ -374,6 +388,7 @@ begin
   EnemyThreatensPlayer := False;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure UpdateEnemy(var e: TEnemyData; dtMs: Single);
 var
   dt: Single;
@@ -410,6 +425,7 @@ begin
   if e.pixel_y + e.size >= maxY then begin e.pixel_y := maxY - e.size; e.vel_y := -e.vel_y; end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure UpdateLandEnemy(var e: TEnemyData; dtMs: Single);
 var
   dt: Single;
@@ -479,8 +495,7 @@ begin
   end;
 end;
 
-// ── Game init / level init (matching Zig) ────────────────────────────────────
-
+// ------------------------------------------------------------------------------------------------
 procedure InitLevel;
 var
   e, ex, ey: Integer;
@@ -536,6 +551,7 @@ begin
   end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure GameStart;
 begin
   score := 0;
@@ -546,6 +562,7 @@ begin
   InitLevel;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure GamePlayerDied;
 begin
   if (lives <= 0) or (gameStatus <> Playing) then Exit;
@@ -563,8 +580,7 @@ begin
   end;
 end;
 
-// ── Player movement (timed, matching Zig) ──────────────────────────────────
-
+// ------------------------------------------------------------------------------------------------
 function CheckCapture: Integer;
 var
   e, c, r: Integer;
@@ -572,7 +588,7 @@ var
   cs: Single;
   ex, ey: Integer;
   captured: Integer;
-  
+
   procedure FloodFillFrom(sx, sy: Integer);
   var
     stack: array[0..999] of TStackPos;
@@ -636,6 +652,7 @@ begin
   CheckCapture := captured;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure SetPlayerDirection(dx, dy: Integer);
 begin
   // Prevent 180-degree reversal (Zig logic)
@@ -645,6 +662,7 @@ begin
   player.dy := dy;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function UpdatePlayer(dtMs: Single): Boolean;
 var
   nextX, nextY: Integer;
@@ -703,7 +721,7 @@ begin
   end;
 end;
 
-// ── Drawing functions ──────────────────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 procedure DrawPixel(col, row: Integer; colour: Cardinal);
 var
   px: PByte;
@@ -714,6 +732,7 @@ begin
     px[ch] := Byte(colour shr (ch * 8));
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure DrawFilledRect(c1, r1, c2, r2: Integer; colour: Cardinal);
 var
   c, r: Integer;
@@ -729,6 +748,7 @@ begin
     end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure DrawPlayer;
 var
   px, py: Integer;
@@ -738,6 +758,7 @@ begin
   DrawFilledRect(px, py, px + CELL_SIZE - 1, py + CELL_SIZE - 1, COL_PLAYER);
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure DrawEnemyCircle(e: TEnemyData; colour: Cardinal);
 var
   cx, cy, r: Integer;
@@ -761,7 +782,7 @@ begin
     end;
 end;
 
-// ── Render the current game state ──────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 procedure Render;
 var
   c, r: Integer;
@@ -797,7 +818,7 @@ begin
   DrawEnemyCircle(landEnemy, COL_LAND_ENEMY);
 end;
 
-// ── Canvas initialization procedure (called from JS) ────────────────────────
+// ------------------------------------------------------------------------------------------------
 procedure CanvasInit(w, h: Integer; pixels: PByte; parent_id: PAnsiChar);
 begin
   canvasWidth := w;
@@ -806,7 +827,7 @@ begin
   canvasInitialized := True;
 end;
 
-// ── Game logic (matching Zig) ──────────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 procedure GameUpdate(dtMs: Single);
 var
   i: Integer;
@@ -865,7 +886,7 @@ begin
     end;
 end;
 
-// ── WASM exports ───────────────────────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 procedure init;
 begin
   rngState := 1;
@@ -877,6 +898,7 @@ begin
   landEnemy.active := False;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure on_key_down(keyCode: Integer);
 begin
   case keyCode of
@@ -887,58 +909,68 @@ begin
   end;
 end;
 
+// ------------------------------------------------------------------------------------------------
 procedure on_start;
 begin
   GameStart;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function step(dt: Single): Integer;
 begin
   GameUpdate(dt * 1000.0);  // Convert seconds to ms
   step := 1;  // Keep running
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_score: Integer;
 begin
   get_score := score;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_lives: Integer;
 begin
   get_lives := lives;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_level: Integer;
 begin
   get_level := level;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_game_status: Integer;
 begin
   get_game_status := Ord(gameStatus);
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_percent_captured: Integer;
 begin
   get_percent_captured := GetPercentCaptured;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_pixels: PByte;
 begin
   get_pixels := canvasPixels;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_width: Integer;
 begin
   get_width := WIDTH;
 end;
 
+// ------------------------------------------------------------------------------------------------
 function get_height: Integer;
 begin
   get_height := HEIGHT;
 end;
 
-// ── Export table ───────────────────────────────────────────────────────────
+// ------------------------------------------------------------------------------------------------
 exports
   init            name 'init',
   on_key_down     name 'on_key_down',
@@ -955,5 +987,6 @@ exports
   CanvasInit      name 'CanvasInit',
   render          name 'render';
 
+// ================================================================================================
 begin
 end.
