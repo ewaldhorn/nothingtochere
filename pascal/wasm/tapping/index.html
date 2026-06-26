@@ -20,13 +20,18 @@
             border: 1px solid #334;
             box-shadow: 0 0 30px rgba(100,80,180,0.2);
             cursor: crosshair;
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
         }
         p { margin-top: 12px; font-size: 13px; }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="800" height="600"></canvas>
-    <p id="status">Loading WASM...</p>
+        <p id="status">Loading WASM...</p>
+        <a href="https://nofuss.co.za/toys/" target="_blank" rel="noopener" style="color:#888; text-decoration:none; font-size:13px;">More Toys</a>
 
     <script>
         const canvas = document.getElementById('canvas');
