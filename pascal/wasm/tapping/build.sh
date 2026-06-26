@@ -8,6 +8,9 @@ ppcrosswasm32 \
     -O3 \
     -XX \
     -Xs \
+    -Xg \
+    -Xd \
+    -Xn \
     -CX \
     -k--initial-memory=4194304 \
     -obasic_canvas.wasm \
