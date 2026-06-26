@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build pascal_bouncer.pas -> bouncer.wasm using Free Pascal wasm32 cross-compiler
+# Build bouncer.pas -> bouncer.wasm using Free Pascal wasm32 cross-compiler
 # Requires: ppcrosswasm32, wasm-opt (from binaryen), fpc.cfg with wasm32 units
 set -e
 

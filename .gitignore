@@ -19,3 +19,4 @@ pascal/wasm/tapping/basic_canvas.o
 pascal/wasm/tapping/basic_canvas.wasm
 pascal/wasm/pascal_bouncer/pascal_bouncer.o
 pascal/wasm/pascal_bouncer/bouncer.wasm
+pascal/wasm/pascal_bouncer/bouncer.o
