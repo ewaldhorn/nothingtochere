@@ -14,7 +14,7 @@ ppcrosswasm32 \
     -CX \
     -k--initial-memory=4194304 \
     -obouncer.wasm \
-    pascal_bouncer.pas
+    bouncer.pas
 
 # Post-process with wasm-opt to shrink further
 wasm-opt -Oz --strip-debug --strip-producers --enable-bulk-memory \
