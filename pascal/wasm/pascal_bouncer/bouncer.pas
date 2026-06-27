@@ -1,7 +1,4 @@
 library bouncer;
-{ pascal_bouncer.pas — Xonix-style "Bouncer" game in FreePascal/WASM }
-{ Ported from the Zig bouncer game, using direct pixelbuffer manipulation }
-{ Same game mechanics: grid-based Xonix clone with bouncing enemies }
 
 {$mode fpc}
 {$inline on}
@@ -712,7 +709,7 @@ begin
         score := score + captured;
       player.dx := 0;
       player.dy := 0;
-      if GetPercentCaptured >= 75 then
+      if GetPercentCaptured >= 85 then
       begin
         gameStatus := LevelUpDelay;
         levelUpTimer := 2000.0;
